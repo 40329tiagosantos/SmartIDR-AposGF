@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.tiasa.aplicacaosmartwatch">
+
+    <uses-feature android:name="android.hardware.type.watch" />
+
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/iconprincipal"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@android:style/Theme.DeviceDefault">
+
+        <activity android:name="pt.ul.fc.di.aplicacaosmartwatch.interfaceaplicacao.ListaRespostas" />
+
+        <service android:name="pt.ul.fc.di.aplicacaosmartwatch.comunicacao.RecetorMensagens">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.BIND_LISTENER" />
+            </intent-filter>
+        </service>
+        <service android:name="pt.ul.fc.di.aplicacaosmartwatch.detecao.DetetorLigacaoSmartphone">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.BIND_LISTENER" />
+            </intent-filter>
+        </service>
+
+        <receiver
+            android:name="pt.ul.fc.di.aplicacaosmartwatch.detecao.ReiniciaDetecao"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <activity android:name="pt.ul.fc.di.aplicacaosmartwatch.interfaceaplicacao.ListaAtividades" />
+
+        <activity android:name="pt.ul.fc.di.aplicacaosmartwatch.interfaceaplicacao.MenuIntrodutorio">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <service android:name="pt.ul.fc.di.aplicacaosmartwatch.interfaceaplicacao.DetetorPartilhaControlada" />
+
+    </application>
+
+</manifest>

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#ddffff"
+    android:layout_centerHorizontal="true"
+    android:layout_centerVertical="true"
+    tools:context="pt.ul.fc.di.aplicacaosmartphone.interfaceaplicacao.MenuPrincipal">
+
+    <Button
+        android:id="@+id/botaoconfig"
+        android:text="Configurações"
+        android:drawableLeft="@drawable/iconcomsinal"
+        android:textColor="@android:color/white"
+        android:textSize="16sp"
+        android:layout_width="270dp"
+        android:layout_height="45dp"
+        android:background="@drawable/botaopersonalizado"
+        android:shadowColor="#A8A8A8"
+        android:shadowDx="0"
+        android:shadowDy="0"
+        android:textAllCaps="false"
+        android:shadowRadius="5"
+        android:layout_marginTop="90dp"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_alignStart="@+id/botaoExibirDados" />
+
+    <Button
+        android:id="@+id/botaoExibirDados"
+        android:text="Relatório de Intrusões"
+        android:textColor="@android:color/white"
+        android:textSize="16sp"
+        android:layout_width="270dp"
+        android:layout_height="45dp"
+        android:background="@drawable/botaopersonalizado"
+        android:shadowColor="#A8A8A8"
+        android:shadowDx="0"
+        android:shadowDy="0"
+        android:textAllCaps="false"
+        android:shadowRadius="5"
+        android:layout_below="@+id/botaoconfig"
+        android:layout_alignStart="@+id/botaoLimparPreferencias"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="40dp" />
+
+    <Button
+        android:id="@+id/botaoInstrucoes"
+        android:text="Instruções"
+        android:textColor="@android:color/white"
+        android:textSize="16sp"
+        android:layout_width="270dp"
+        android:layout_height="45dp"
+        android:background="@drawable/botaopersonalizado"
+        android:shadowColor="#A8A8A8"
+        android:shadowDx="0"
+        android:shadowDy="0"
+        android:textAllCaps="false"
+        android:shadowRadius="5"
+        android:elegantTextHeight="true"
+        android:layout_below="@+id/botaoLimparPreferencias"
+        android:layout_alignStart="@+id/botaoExibirDados"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="40dp" />
+
+
+    <Button
+        android:id="@+id/botaoLimparPreferencias"
+        android:text="Limpar Preferências"
+        android:textColor="@android:color/white"
+        android:textSize="16sp"
+        android:layout_width="270dp"
+        android:layout_height="45dp"
+        android:background="@drawable/botaopersonalizado"
+        android:shadowColor="#A8A8A8"
+        android:shadowDx="0"
+        android:shadowDy="0"
+        android:textAllCaps="false"
+        android:shadowRadius="5"
+        android:layout_below="@+id/botaoExibirDados"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="40dp" />
+
+</RelativeLayout>

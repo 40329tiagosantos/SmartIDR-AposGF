@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="10dp">
+
+    //Item Lista Respostas
+    <TextView
+        android:id="@+id/nome_resposta"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/icon_resposta"
+        android:paddingLeft="12dp"
+        android:layout_centerVertical="true"
+        android:textSize="12dp"
+        android:textColor="#000000" />
+
+    <TextView
+        android:id="@+id/configuracao"
+        android:text=">"
+        android:visibility="invisible"
+        android:layout_centerVertical="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:textSize="26dp" />
+
+    <ImageView
+        android:id="@+id/icon_resposta"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_alignParentLeft="true"
+        android:layout_centerVertical="true" />
+
+    //Item Lista Registo Atividades
+    <TextView
+        android:id="@+id/nome_ficheiro_atividades"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingLeft="12dp"
+        android:layout_centerVertical="true"
+        android:textSize="14dp"
+        android:textColor="#000000" />
+
+</RelativeLayout>

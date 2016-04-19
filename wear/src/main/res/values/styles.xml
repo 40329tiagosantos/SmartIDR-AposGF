@@ -1,0 +1,18 @@
+<resources>
+    <style name="RedTheme" >
+
+        <item name="android:background">#FC807C</item>
+
+    </style>
+    <style name="BlueTheme" >
+
+        <item name="android:background">#DDFFFF</item>
+
+    </style>
+
+    <style name="YellowTheme" >
+
+        <item name="android:background">#FFEDA8</item>
+
+    </style>
+</resources>

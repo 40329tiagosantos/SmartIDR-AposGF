@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.tiasa.aplicacaosmartwatch">
+
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.WRITE_SETTINGS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/iconprincipal"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+
+        //Respostas
+
+        <receiver android:name="pt.ul.fc.di.aplicacaosmartphone.respostas.DesativarSom">
+            <intent-filter>
+                <action android:name="android.media.VOLUME_CHANGED_ACTION" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name="pt.ul.fc.di.aplicacaosmartphone.respostas.Bloquear"
+            android:icon="@drawable/iconbloquearecra"
+            android:label="a Bloquear">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="resposta.PLUGIN" />
+            </intent-filter>
+        </service>
+
+        <service android:name="pt.ul.fc.di.aplicacaosmartphone.respostas.PedirAutenticacao"
+            android:icon="@drawable/iconautenticacao"
+            android:label="b Pedir Autenticação">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="resposta.PLUGIN" />
+            </intent-filter>
+        </service>
+
+        <receiver
+            android:name="pt.ul.fc.di.aplicacaosmartphone.respostas.DeviceAdminReceiver"
+            android:permission="android.permission.BIND_DEVICE_ADMIN">
+            <intent-filter>
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.app.device_admin"
+                android:resource="@xml/device_admin_sample" />
+        </receiver>
+
+        <service
+            android:name="pt.ul.fc.di.aplicacaosmartphone.respostas.DesativarAplicacoes"
+            android:label="Desativar Aplicações" />
+        <service
+            android:name="pt.ul.fc.di.aplicacaosmartphone.respostas.AlarmeSonoro"
+            android:icon="@drawable/iconalarmesonoro"
+            android:label="f Emitir Alarme Sonoro">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="resposta.PLUGIN" />
+            </intent-filter>
+        </service>
+        <service
+            android:name="pt.ul.fc.di.aplicacaosmartphone.respostas.Notificacao"
+            android:icon="@drawable/iconnotificacao"
+            android:label="h Receber Notificação">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="resposta.PLUGIN" />
+            </intent-filter>
+        </service>
+        <service
+            android:name="pt.ul.fc.di.aplicacaosmartphone.respostas.RegistoAtividades"
+            android:icon="@drawable/iconatividades"
+            android:label="i Registar Atividades">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="resposta.PLUGIN" />
+            </intent-filter>
+        </service>
+        <service
+            android:name="pt.ul.fc.di.aplicacaosmartphone.respostas.IniciarFotografarIntruso"
+            android:label="Fotografar Intruso">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </service>
+        <service
+            android:name="pt.ul.fc.di.aplicacaosmartphone.respostas.FotografarIntruso"
+            android:icon="@drawable/icontirarfotografia"
+            android:label="j Fotografar Intruso">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="resposta.PLUGIN" />
+            </intent-filter>
+        </service>
+        <service android:name="pt.ul.fc.di.aplicacaosmartphone.respostas.GestorAlbunsVideos" />
+        <service android:name="pt.ul.fc.di.aplicacaosmartphone.respostas.GestorAlbunsFotografias">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </service>
+        <service
+            android:name="pt.ul.fc.di.aplicacaosmartphone.respostas.ExibirMensagemTexto"
+            android:label="Exibir Mensagem de Texto" />
+        <service
+            android:name="pt.ul.fc.di.aplicacaosmartphone.respostas.DetetaIntrusao"
+            android:enabled="true"
+            android:exported="true"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+        </service>
+
+
+        //Deteccao
+
+
+        <service android:name="pt.ul.fc.di.aplicacaosmartphone.detecao.DetetorLigacaoSmartwatch">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="com.example.tiasa.aplicacaosmartphone.deteccao.PLUGIN" />
+            </intent-filter>
+        </service>
+
+        <receiver
+            android:name="pt.ul.fc.di.aplicacaosmartphone.detecao.ReiniciaDetecao"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        //Comunicacao
+
+
+        <service android:name="pt.ul.fc.di.aplicacaosmartphone.comunicacao.RecetorMensagens">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <action android:name="com.google.android.gms.wearable.BIND_LISTENER" />
+
+                <category android:name="com.example.tiasa.aplicacaosmartphone.comunicacao.PLUGIN" />
+            </intent-filter>
+        </service>
+
+
+        //Interface
+
+
+        <activity
+            android:name="pt.ul.fc.di.aplicacaosmartphone.configuracoes.ConfiguracoesRespostas"
+            android:configChanges="keyboardHidden|orientation|screenSize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="pt.ul.fc.di.aplicacaosmartphone.interfaceaplicacao.MenuPrincipal"
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
+        <activity android:name="pt.ul.fc.di.aplicacaosmartphone.interfaceaplicacao.Instrucoes" />
+        <activity android:name="pt.ul.fc.di.aplicacaosmartphone.relatorio.ListaRegistosAtividades" />
+        <activity android:name="pt.ul.fc.di.aplicacaosmartphone.relatorio.ListaFotografias" />
+        <activity android:name="pt.ul.fc.di.aplicacaosmartphone.relatorio.ListaAtividades" />
+        <activity
+            android:name="pt.ul.fc.di.aplicacaosmartphone.interfaceaplicacao.MenuConfiguracoesRespostas"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name="pt.ul.fc.di.aplicacaosmartphone.interfaceaplicacao.MenuRelatoriosIntrusao"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name="pt.ul.fc.di.aplicacaosmartphone.interfaceaplicacao.MenuInstruccoes"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name="pt.ul.fc.di.aplicacaosmartphone.interfaceaplicacao.MenuIntrodutorio"
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+
+        //Configuracao
+
+        <activity
+            android:name="pt.ul.fc.di.aplicacaosmartphone.configuracoes.ConfiguracoesMensagemTexto"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:icon="@drawable/iconexibirmensagem"
+            android:label="g Exibir Mensagem de Texto">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="resposta.PLUGIN" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="pt.ul.fc.di.aplicacaosmartphone.configuracoes.ConfiguracoesAplicacoes"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:icon="@drawable/iconaplicacao"
+            android:label="c Desativar Aplicações">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="resposta.PLUGIN" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="pt.ul.fc.di.aplicacaosmartphone.configuracoes.ConfiguracoesAlbunsFotografias"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:icon="@drawable/iconalbumfoto"
+            android:label="d Ocultar Álbuns de Fotografias">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="resposta.PLUGIN" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="pt.ul.fc.di.aplicacaosmartphone.configuracoes.ConfiguracoesAlbunsVideos"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:icon="@drawable/iconalbumvideo"
+            android:label="e Ocultar Álbuns de Vídeos">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="resposta.PLUGIN" />
+            </intent-filter>
+        </activity>
+
+        <service android:name="pt.ul.fc.di.aplicacaosmartphone.configuracoes.LimparPreferencias" />
+        <service
+            android:name="pt.ul.fc.di.aplicacaosmartphone.configuracoes.LimparEstados"
+            android:enabled="true"
+            android:exported="true"></service>
+    </application>
+
+</manifest>
