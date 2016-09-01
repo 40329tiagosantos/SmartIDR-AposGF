@@ -26,7 +26,6 @@ import java.util.Collections;
 public class ListaFotografias extends Activity {
 
     private ArrayList<ItemLista> listaFotografiasIntrusos;
-    private ListView vistaFotografiasIntrusos;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -77,7 +76,7 @@ public class ListaFotografias extends Activity {
 
 
     private void criaListaFotografiasIntruso() {
-        vistaFotografiasIntrusos = (ListView) findViewById(R.id.lista_fotosintruso);
+        ListView vistaFotografiasIntrusos = (ListView) findViewById(R.id.lista_fotosintruso);
 
         ArrayAdapter<ItemLista> adapter = new ArrayAdapter<ItemLista>(this, R.layout.item_lista_intruso, listaFotografiasIntrusos) {
             @Override

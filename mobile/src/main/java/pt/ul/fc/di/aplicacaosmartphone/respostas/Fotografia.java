@@ -9,7 +9,7 @@ import java.io.IOException;
 
 public class Fotografia extends SurfaceView implements SurfaceHolder.Callback {
 
-    SurfaceHolder mHolder;
+    private SurfaceHolder mHolder;
     public Camera camera;
 
     public Fotografia(Context context) {

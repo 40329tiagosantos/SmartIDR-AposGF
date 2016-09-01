@@ -14,39 +14,35 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.view.WindowManager;
 
-import pt.ul.fc.di.aplicacaosmartphone.detecao.DetetorLigacaoSmartwatch;
-
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import pt.ul.fc.di.aplicacaosmartphone.detecao.DetetorLigacaoSmartwatch;
+
 public class FotografarIntruso extends Service {
 
     public static Fotografia fotografia;
     public static int numeroSessao;
-    private FileOutputStream outStream;
-    private int larguraFotografia, alturaFotografia;
     private int numeroMaxCaras;
-    private FaceDetector detetorCaras;
     private FaceDetector.Face[] cara;
-    private TimerTask tarefa;
     private Timer cronometro;
     private int numeroCarasDetetadas;
     private SharedPreferences numeroSessaoAtual;
     private WindowManager windowManager;
     private WindowManager.LayoutParams parametros;
-    private Bitmap bitMapFoto;
     private long tamanhoFoto;
     private boolean tirouFoto = false;
     public static boolean ocorreuIntrusaoFotogIntr;
 
     @Override
     public int onStartCommand(Intent intent, int flags, final int startId) {
-        ocorreuIntrusaoFotogIntr=true;
+        String estado = intent.getStringExtra("estado");
+        if (estado.equals("SemLigacao"))
+            ocorreuIntrusaoFotogIntr = true;
         tamanhoFoto = 0;
         numeroCarasDetetadas = 0;
         numeroMaxCaras = 1;
@@ -62,12 +58,12 @@ public class FotografarIntruso extends Service {
         parametros.height = 1;
         parametros.x = 0;
         parametros.y = 0;
-        parametros.screenOrientation= ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+        parametros.screenOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
         windowManager.addView(fotografia, parametros);
         cara = new FaceDetector.Face[numeroMaxCaras];
 
         cronometro = new Timer();
-        tarefa = new java.util.TimerTask() {
+        TimerTask tarefa = new TimerTask() {
             @Override
             public void run() {
                 fotografia.camera.takePicture(null, null, jpegCallback);
@@ -101,13 +97,13 @@ public class FotografarIntruso extends Service {
         public void onPictureTaken(byte[] dados, Camera camera) {
             try {
                 String caminhoFotografia = numeroSessao + DetetorLigacaoSmartwatch.estado + "fotoIntrusoNova.jpeg";
-                outStream = openFileOutput(caminhoFotografia, Context.MODE_PRIVATE);
+                FileOutputStream outStream = openFileOutput(caminhoFotografia, Context.MODE_PRIVATE);
                 outStream.write(dados);
                 outStream.close();
                 FileInputStream inStream = openFileInput(caminhoFotografia);
                 BitmapFactory.Options BitmapFactoryOptionsbfo = new BitmapFactory.Options();
                 BitmapFactoryOptionsbfo.inPreferredConfig = Bitmap.Config.RGB_565;
-                bitMapFoto = BitmapFactory.decodeStream(inStream, null, BitmapFactoryOptionsbfo);
+                Bitmap bitMapFoto = BitmapFactory.decodeStream(inStream, null, BitmapFactoryOptionsbfo);
                 inStream.close();
 
                 if (bitMapFoto.getWidth() > bitMapFoto.getHeight())
@@ -115,10 +111,9 @@ public class FotografarIntruso extends Service {
                 else
                     bitMapFoto = Bitmap.createScaledBitmap(bitMapFoto, 800, 1280, true);
 
-                larguraFotografia = bitMapFoto.getWidth();
-                alturaFotografia = bitMapFoto.getHeight();
-                detetorCaras = new FaceDetector(larguraFotografia, alturaFotografia, numeroMaxCaras);
-                numeroCarasDetetadas = 0;
+                int larguraFotografia = bitMapFoto.getWidth();
+                int alturaFotografia = bitMapFoto.getHeight();
+                FaceDetector detetorCaras = new FaceDetector(larguraFotografia, alturaFotografia, numeroMaxCaras);
                 numeroCarasDetetadas = detetorCaras.findFaces(bitMapFoto, cara);
                 if (numeroCarasDetetadas == 1) {
                     cronometro.cancel();
@@ -151,11 +146,8 @@ public class FotografarIntruso extends Service {
                     }
                     tirouFoto = true;
                 }
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
-            } finally {
             }
         }
     };

@@ -13,13 +13,6 @@
     <ListView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/lista_atividades"
-        android:layout_below="@+id/cabecalho"
-        android:layout_alignParentStart="true"/>
-
-    <ListView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
         android:id="@+id/lista_fotosintruso"
         android:listSelector="@android:color/transparent"
         android:layout_below="@+id/cabecalho"
@@ -30,7 +23,7 @@
         android:layout_height="wrap_content"
         android:id="@+id/cabecalho"
         android:textColor="@color/colorPrimary"
-        android:textSize="17dp"
+        android:textSize="17sp"
         android:textStyle="bold"
         android:layout_centerVertical="true"
         android:layout_alignParentTop="true"

@@ -20,12 +20,14 @@ public class GestorAlbunsFotografias extends Service {
     private boolean escondeuPartilha;
     private boolean escondeuSemLigacao;
     private boolean escondeuComLigacao;
+    private boolean escondeuQuickLaunch;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent.getStringExtra("reporAlbuns") != null) {
             apresentaAlbunsEstado("Partilha");
             apresentaAlbunsEstado("SemLigacao");
+            apresentaAlbunsEstado("QuickLaunch");
         } else {
             if (intent.getStringExtra("estado").equals("Partilha")) {
                 if (!escondeuPartilha) {
@@ -36,6 +38,9 @@ public class GestorAlbunsFotografias extends Service {
                     escondeuPartilha = false;
                 }
             }
+            if (intent.getStringExtra("estado").equals("QuickLaunch")) {
+                   escondeAlbunsEstado("QuickLaunch");
+             }
             if (intent.getStringExtra("estado").equals("SemLigacao")) {
                 if (!escondeuSemLigacao) {
                     escondeAlbunsEstado("SemLigacao");

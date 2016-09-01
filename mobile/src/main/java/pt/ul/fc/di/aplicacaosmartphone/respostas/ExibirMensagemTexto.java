@@ -28,8 +28,9 @@ public class ExibirMensagemTexto extends Service {
         return null;
     }
 
-    public void iniciaExibirMensagem(String estado) {
-        ocorreuIntrusaoExibMen = true;
+    private void iniciaExibirMensagem(String estado) {
+        if (estado.equals("SemLigacao"))
+            ocorreuIntrusaoExibMen = true;
         try {
             FileInputStream ficheiroMensagem = openFileInput("Mensagem" + estado);
             BufferedReader leitorFicheiroMensagem = new BufferedReader(new InputStreamReader(ficheiroMensagem));

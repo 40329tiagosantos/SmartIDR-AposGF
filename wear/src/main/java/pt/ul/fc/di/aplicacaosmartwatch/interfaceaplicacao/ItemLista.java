@@ -8,7 +8,6 @@ import android.widget.LinearLayout;
 public class ItemLista extends LinearLayout implements WearableListView.OnCenterProximityListener {
 
     private static final float NO_ALPHA = 1f, PARTIAL_ALPHA = 0.60f;
-    private static final float NO_X_TRANSLATION = 0f, X_TRANSLATION = 20f;
 
     public ItemLista(Context context) {
         this(context, null);
@@ -29,19 +28,13 @@ public class ItemLista extends LinearLayout implements WearableListView.OnCenter
 
     @Override
     public void onCenterPosition(boolean animate) {
-        if (animate) {
-            animate().alpha(NO_ALPHA).translationX(X_TRANSLATION).start();
-            animate().scaleX(1f).start();
-            animate().scaleY(1f).start();
-        }
+        if(animate)
+            animate().alpha(NO_ALPHA).start();
     }
 
     @Override
     public void onNonCenterPosition(boolean animate) {
-        if (animate) {
-            animate().alpha(PARTIAL_ALPHA).translationX(NO_X_TRANSLATION).start();
-            animate().scaleX(0.9f).start();
-            animate().scaleY(0.9f).start();
-        }
+        if(animate)
+            animate().alpha(PARTIAL_ALPHA).start();
     }
 }

@@ -21,11 +21,12 @@ public class IniciarFotografarIntruso extends Service {
         return null;
     }
 
-    public void iniciaFotografarIntruso(String estado) {
+    private void iniciaFotografarIntruso(String estado) {
         SharedPreferences.Editor editor = getApplicationContext().getSharedPreferences("preferenciasUtilizador"+estado, MODE_PRIVATE).edit();
         editor.remove("FotografarIntruso");
         editor.commit();
         Intent tiraFotografia = new Intent(getApplicationContext(), FotografarIntruso.class);
+        tiraFotografia.putExtra("estado",estado);
         startService(tiraFotografia);
     }
 }

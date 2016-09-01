@@ -6,8 +6,6 @@ import android.content.SharedPreferences;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 
-import java.io.File;
-
 import pt.ul.fc.di.aplicacaosmartphone.respostas.FotografarIntruso;
 import pt.ul.fc.di.aplicacaosmartphone.respostas.GestorAlbunsFotografias;
 import pt.ul.fc.di.aplicacaosmartphone.respostas.GestorAlbunsVideos;
@@ -37,14 +35,6 @@ public class LimparPreferencias extends Service {
         editorData = data.edit();
         editorData.clear();
         editorData.apply();
-
-        File ficheiros[] = getApplicationContext().getFilesDir().listFiles();
-        for (File ficheiro : ficheiros) {
-            if (ficheiro.getName().contains("fotoIntruso"))
-                ficheiro.delete();
-            if (ficheiro.getName().contains("atividadesIntruso"))
-                ficheiro.delete();
-        }
 
         SharedPreferences.Editor numeroSessaoAtual = getApplicationContext().getSharedPreferences("numeroSessao", MODE_PRIVATE).edit();
         numeroSessaoAtual.clear();

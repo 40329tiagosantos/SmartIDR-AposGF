@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:checkableBehavior="single"
+        >
+        <item
+            android:id="@+id/recentactivity"
+            android:icon="@drawable/iconprincipal"
+            android:title="Recent activity"
+            />
+    </group>
+    <item android:title="More"
+        android:orderInCategory="3"
+        android:id="@+id/bb">
+        <menu
+            >
+            <group android:checkableBehavior="single"
+                android:id="@+id/aa">
+                <item
+                    android:id="@+id/setup"
+                    android:icon="@drawable/iconconfiguracao"
+                    android:title="Setup"
+                    />
+                <item
+                    android:id="@+id/cleandata"
+                    android:icon="@drawable/iconlimparprefs"
+                    android:title="Clean all data"
+                    android:checkable="false"
+                    />
+
+                <item
+                    android:id="@+id/help"
+                    android:icon="@drawable/iconinstrucoes"
+                    android:title="Help"
+                    />
+            </group>
+        </menu>
+
+    </item>
+
+</menu>

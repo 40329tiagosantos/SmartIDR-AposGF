@@ -7,12 +7,12 @@ import android.content.Intent;
 
 public class ReiniciaDetecao extends BroadcastReceiver {
 
-    public static boolean reiniciou=false;
+    public static boolean reiniciou;
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        reiniciou=true;
-        Intent reinicia = new Intent(context,DetetorLigacaoSmartwatch.class);
+        reiniciou = true;
+        Intent reinicia = new Intent(context, DetetorLigacaoSmartwatch.class);
         context.startService(reinicia);
     }
 }

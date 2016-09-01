@@ -15,16 +15,23 @@
         android:supportsRtl="true"
         android:theme="@android:style/Theme.DeviceDefault">
 
-        <activity android:name="pt.ul.fc.di.aplicacaosmartwatch.interfaceaplicacao.ListaRespostas" />
-
         <service android:name="pt.ul.fc.di.aplicacaosmartwatch.comunicacao.RecetorMensagens">
             <intent-filter>
-                <action android:name="com.google.android.gms.wearable.BIND_LISTENER" />
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+
+                <data
+                    android:host="*"
+                    android:pathPrefix="/"
+                    android:scheme="wear" />
             </intent-filter>
         </service>
         <service android:name="pt.ul.fc.di.aplicacaosmartwatch.detecao.DetetorLigacaoSmartphone">
             <intent-filter>
-                <action android:name="com.google.android.gms.wearable.BIND_LISTENER" />
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+                <data
+                    android:host="*"
+                    android:pathPrefix="/"
+                    android:scheme="wear" />
             </intent-filter>
         </service>
 
@@ -37,8 +44,6 @@
             </intent-filter>
         </receiver>
 
-        <activity android:name="pt.ul.fc.di.aplicacaosmartwatch.interfaceaplicacao.ListaAtividades" />
-
         <activity android:name="pt.ul.fc.di.aplicacaosmartwatch.interfaceaplicacao.MenuIntrodutorio">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -47,7 +52,9 @@
             </intent-filter>
         </activity>
 
-        <service android:name="pt.ul.fc.di.aplicacaosmartwatch.interfaceaplicacao.DetetorPartilhaControlada" />
+        <service android:name="pt.ul.fc.di.aplicacaosmartwatch.detecao.DetetorPartilhaControlada" />
+
+        <activity android:name="pt.ul.fc.di.aplicacaosmartwatch.interfaceaplicacao.ConstroiFragmentos" />
 
     </application>
 

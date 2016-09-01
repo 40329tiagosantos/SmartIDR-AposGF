@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.wearable.view.BoxInsetLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:id="@+id/frame_layout_atividades"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        >
+
+        <ImageView
+            android:layout_width="37dp"
+            android:layout_height="37dp"
+            android:id="@+id/iconAtividade"
+            android:layout_above="@+id/timestamp"
+            android:layout_centerHorizontal="true" />
+
+        <TextView
+            android:id="@+id/timestamp"
+            android:singleLine="false"
+            android:fontFamily="sans-serif-condensed-light"
+            android:textColor="@color/dark_blue"
+            android:textSize="13sp"
+            android:layout_above="@+id/descricao"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            />
+
+        <TextView
+            android:id="@+id/descricao"
+            android:singleLine="false"
+            android:fontFamily="sans-serif-condensed-light"
+            android:textColor="@color/dark_grey"
+            android:textSize="12sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            />
+
+    </RelativeLayout>
+</android.support.wearable.view.BoxInsetLayout>

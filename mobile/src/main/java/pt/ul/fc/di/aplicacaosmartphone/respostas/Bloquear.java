@@ -22,14 +22,14 @@ public class Bloquear extends Service{
     private int volume;
     private AudioManager volumeSom;
     private String estado;
+    public static boolean bloqueado;
 
     @Override
     public int onStartCommand(Intent intent, int flags, final int startId) {
         estado = intent.getStringExtra("estado");
-
         if (!ativado) {
             if (estado.equals("ComLigacaoBT")) {
-                Mensagem mensagemPedido = new Mensagem("✓ Ecrã bloqueado com sucesso!", getApplication());
+                Mensagem mensagemPedido = new Mensagem("Bloqueado", getApplication());
                 mensagemPedido.enviaMensagem();
             }
             volumeSom = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
@@ -56,9 +56,10 @@ public class Bloquear extends Service{
             this.wrapperView = new RelativeLayout(getBaseContext());
 
             this.windowsManager.addView(this.wrapperView, localLayoutParams);
-
+            bloqueado=true;
         } else {
             stopSelf();
+            bloqueado=false;
         }
         ativado = !ativado;
         return START_NOT_STICKY;
@@ -68,13 +69,14 @@ public class Bloquear extends Service{
     public void onDestroy(){
         super.onDestroy();
         if (estado.equals("ComLigacaoBT")) {
-            Mensagem mensagemPedido = new Mensagem("✓ Ecrã desbloqueado com sucesso!", getApplication());
+            Mensagem mensagemPedido = new Mensagem("Desbloqueado", getApplication());
             mensagemPedido.enviaMensagem();
         }
         this.windowsManager.removeView(this.wrapperView);
         this.wrapperView.removeAllViews();
         android.provider.Settings.System.putInt(getApplicationContext().getContentResolver(), android.provider.Settings.System.SCREEN_BRIGHTNESS, brilho);
         volumeSom.setStreamVolume(AudioManager.STREAM_SYSTEM, volume, 0);
+        bloqueado=false;
     }
 
     @Nullable

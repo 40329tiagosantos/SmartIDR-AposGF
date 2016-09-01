@@ -11,15 +11,13 @@ import pt.ul.fc.di.aplicacaosmartphone.comunicacao.Mensagem;
 
 public class PedirAutenticacao extends Service {
 
-    private DevicePolicyManager devicePolicyManager;
-
     @Override
     public int onStartCommand(Intent intent, int flags, final int startId) {
         String estado = intent.getStringExtra("estado");
-        devicePolicyManager = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
+        DevicePolicyManager devicePolicyManager = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
         devicePolicyManager.lockNow();
         if (estado.equals("ComLigacaoBT")) {
-            Mensagem mensagemPedido = new Mensagem("✓ Pedido de autenticação ativado com sucesso!", getApplication());
+            Mensagem mensagemPedido = new Mensagem("PedidoAutenticacaoAtivado", getApplication());
             mensagemPedido.enviaMensagem();
         }
         return START_NOT_STICKY;

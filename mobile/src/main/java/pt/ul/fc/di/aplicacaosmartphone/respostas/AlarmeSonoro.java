@@ -13,10 +13,7 @@ import com.example.tiasa.aplicacaosmartwatch.R;
 
 public class AlarmeSonoro extends Service {
 
-    private MediaPlayer mediaPlayer;
-    private AudioManager volumeSom;
     public static boolean ocorreuIntrusaoAlarSon;
-
 
     @Override
     public int onStartCommand(Intent intent, int flags, final int startId) {
@@ -25,17 +22,19 @@ public class AlarmeSonoro extends Service {
         return START_NOT_STICKY;
     }
 
+
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
         return null;
     }
 
-    public void iniciaAlarmeSonoro(String estado) {
+    private void iniciaAlarmeSonoro(String estado) {
+        if(estado.equals("SemLigacao"))
         ocorreuIntrusaoAlarSon=true;
-        volumeSom = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        AudioManager volumeSom = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         volumeSom.setStreamVolume(AudioManager.STREAM_MUSIC, volumeSom.getStreamMaxVolume(AudioManager.STREAM_MUSIC), 0);
-        mediaPlayer = MediaPlayer.create(this, R.raw.alarmesonoro);
+        MediaPlayer mediaPlayer = MediaPlayer.create(this, R.raw.alarmesonoro);
         mediaPlayer.start();
         SharedPreferences.Editor editor = getApplicationContext().getSharedPreferences("preferenciasUtilizador" + estado, MODE_PRIVATE).edit();
         editor.remove("AlarmeSonoro");

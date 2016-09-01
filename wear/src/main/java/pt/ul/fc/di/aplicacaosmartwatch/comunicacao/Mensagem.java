@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Mensagem implements GoogleApiClient.ConnectionCallbacks {
 
-    private static final long CONNECTION_TIME_OUT_MS = 100;
+    private static final long CONNECTION_TIME_OUT_MS = 2000;
     private String mensagem;
     private Application aplicacao;
 

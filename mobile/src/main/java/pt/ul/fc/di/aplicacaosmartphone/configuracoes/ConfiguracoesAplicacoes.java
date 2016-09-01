@@ -1,19 +1,22 @@
 package pt.ul.fc.di.aplicacaosmartphone.configuracoes;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.net.Uri;
 import android.os.Bundle;
-import android.text.SpannableString;
-import android.text.style.RelativeSizeSpan;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v7.app.AppCompatActivity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Switch;
@@ -28,52 +31,54 @@ import java.util.Map;
 import java.util.Set;
 
 import pt.ul.fc.di.aplicacaosmartphone.relatorio.ItemLista;
-import pt.ul.fc.di.aplicacaosmartphone.respostas.DesativarAplicacoes;
-import pt.ul.fc.di.aplicacaosmartphone.respostas.GestorAlbunsVideos;
+import pt.ul.fc.di.aplicacaosmartphone.relatorio.ListaAtividadesSmartIDR;
 
-public class ConfiguracoesAplicacoes extends Activity {
+public class ConfiguracoesAplicacoes extends Fragment {
 
     private ArrayList<ItemLista> listaAplicacoes;
     private ArrayList<String> listaAplicacoesSeleccionadas;
-    private String estado;
+    public static String estado;
     private boolean selecionarTudo;
+    private View view;
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_lista_aplicacoes);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        view = inflater.inflate(R.layout.activity_lista_aplicacoes, container, false);
+        Bundle bundle = this.getArguments();
+        if (bundle != null) {
+            estado = bundle.getString("estado");
+        }
+
         criaListaAplicacoes();
 
-        Button botaoConfirmarAplicacoes = (Button) findViewById(R.id.botaoConfirmarAplicacoes);
+        Button botaoConfirmarAplicacoes = (Button) view.findViewById(R.id.botaoConfirmarAplicacoes);
         listaAplicacoesSeleccionadas = new ArrayList<>();
 
-        TextView cabecalho = (TextView) findViewById(R.id.cabecalho);
-        estado = getIntent().getStringExtra("estado");
+        TextView cabecalho = (TextView) view.findViewById(R.id.cabecalho);
 
         if (estado.equals("SemLigacao"))
-            cabecalho.append("Modo Sem Ligação");
+            ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle("Set out of reach mode");
+
 
         if (estado.equals("Partilha"))
-            cabecalho.append("Modo de Partilha Controlada");
-
-        SpannableString nomeRespostaEditado = new SpannableString(cabecalho.getText().toString());
-        nomeRespostaEditado.setSpan(new RelativeSizeSpan(1.2f), 0, nomeRespostaEditado.length(), 0);
-        cabecalho.setText(nomeRespostaEditado);
-        cabecalho.append("\nDesativar Aplicações");
+            ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle("Set sharing mode");
 
 
+        if (estado.equals("QuickLaunch"))
+            ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle("Set quick launch");
+
+        cabecalho.append("App blocker");
 
 
         botaoConfirmarAplicacoes.setOnClickListener(new View.OnClickListener() {
                                                         @Override
                                                         public void onClick(View v) {
-                                                            SharedPreferences preferencias = getApplicationContext().getSharedPreferences("preferenciasUtilizador" + estado, MODE_PRIVATE);
-                                                            SharedPreferences.Editor editor = getApplicationContext().getSharedPreferences("preferenciasUtilizador" + estado, MODE_PRIVATE).edit();
-
+                                                            SharedPreferences preferencias = getActivity().getApplicationContext().getSharedPreferences("preferenciasUtilizador" + estado, Context.MODE_PRIVATE);
+                                                            SharedPreferences.Editor editor = getActivity().getApplicationContext().getSharedPreferences("preferenciasUtilizador" + estado, Context.MODE_PRIVATE).edit();
                                                             int numeroAplicacoesEscolhidas = 0;
 
                                                             for (Map.Entry<String, ?> entry : preferencias.getAll().entrySet()) {
-                                                                if (entry.getKey().toString().contains("preferenciaAplicacoes")) {
+                                                                if (entry.getKey().contains("preferenciaAplicacoes")) {
                                                                     numeroAplicacoesEscolhidas++;
                                                                 }
                                                             }
@@ -91,41 +96,71 @@ public class ConfiguracoesAplicacoes extends Activity {
 
                                                             for (int i = numeroAplicacoesEscolhidas; i < numeroAplicacoesEscolhidas + listaAplicacoesSeleccionadas.size(); i++) {
                                                                 for (int j = 0; j < listaAplicacoes.size(); j++) {
-                                                                    if (listaAplicacoesSeleccionadas.get(i - numeroAplicacoesEscolhidas).contains(listaAplicacoes.get(j).devolveNome())) {
+                                                                    if (listaAplicacoesSeleccionadas.get(i - numeroAplicacoesEscolhidas).equals(listaAplicacoes.get(j).devolveNome() + listaAplicacoes.get(j).devolveNomePacote())) {
                                                                         editor.putString("preferenciaAplicacoes" + j, listaAplicacoesSeleccionadas.get(i - numeroAplicacoesEscolhidas));
                                                                         editor.commit();
                                                                     }
                                                                 }
                                                             }
+                                                            if (!estado.equals("QuickLaunch")) {
+                                                                SharedPreferences posicoes = getActivity().getApplicationContext().getSharedPreferences("posicoes" + ConfiguracoesRespostas.estado, Context.MODE_PRIVATE);
+                                                                SharedPreferences.Editor editorPosicoes = posicoes.edit();
+                                                                editorPosicoes.putString("posicao" + ConfiguracoesRespostas.estado + String.valueOf(ConfiguracoesRespostas.numeroRespostas), ConfiguracoesRespostas.listaRespostas.get(ConfiguracoesRespostas.posicao).devolveNomePacote());
+                                                                editorPosicoes.commit();
+                                                                ConfiguracoesRespostas.listaRespostas.get(ConfiguracoesRespostas.posicao).colocaSeleccionado(true);
+                                                                ConfiguracoesRespostas.numeroRespostas++;
 
-                                                            SharedPreferences posicoes = getApplicationContext().getSharedPreferences("posicoes" + ConfiguracoesRespostas.estado, MODE_PRIVATE);
-                                                            SharedPreferences.Editor editorPosicoes = posicoes.edit();
-                                                            editorPosicoes.putString("posicao" + ConfiguracoesRespostas.estado + String.valueOf(ConfiguracoesRespostas.numeroRespostas), ConfiguracoesRespostas.listaRespostas.get(ConfiguracoesRespostas.posicao).devolveNomePacote());
-                                                            editorPosicoes.commit();
-                                                            ConfiguracoesRespostas.listaRespostas.get(ConfiguracoesRespostas.posicao).colocaSeleccionado(true);
-                                                            ConfiguracoesRespostas.numeroRespostas++;
 
-                                                            Toast.makeText(getApplicationContext(), "✓ Aplicações Definidas!", Toast.LENGTH_SHORT).show();
-                                                            finish();
+                                                                Fragment fragment = null;
+                                                                Class fragmentClass;
+                                                                fragmentClass = ConfiguracoesRespostas.class;
+                                                                try {
+                                                                    fragment = (Fragment) fragmentClass.newInstance();
+                                                                    Bundle bundle = new Bundle();
+                                                                    bundle.putString("estado", estado);
+                                                                    fragment.setArguments(bundle);
+                                                                } catch (java.lang.InstantiationException | IllegalAccessException e) {
+                                                                    e.printStackTrace();
+                                                                }
+                                                                FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+                                                                fragmentManager.beginTransaction().replace(R.id.layoutSeparador, fragment).addToBackStack(null).addToBackStack(null).commit();
+                                                            } else {
+                                                                editor.putString("DesativarAplicacoes","DesativarAplicacoes");
+                                                                editor.commit();
+                                                                Fragment fragment = null;
+                                                                Class fragmentClass;
+                                                                fragmentClass = ListaAtividadesSmartIDR.class;
+                                                                try {
+                                                                    fragment = (Fragment) fragmentClass.newInstance();
+                                                                    Bundle bundle = new Bundle();
+                                                                    bundle.putString("estado", estado);
+                                                                    fragment.setArguments(bundle);
+                                                                } catch (java.lang.InstantiationException | IllegalAccessException e) {
+                                                                    e.printStackTrace();
+                                                                }
+                                                                FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+                                                                fragmentManager.beginTransaction().replace(R.id.layoutSeparador, fragment).addToBackStack(null).addToBackStack(null).commit();
+                                                            }
+                                                            Toast.makeText(getActivity().getApplicationContext(), "✓ Aplicações Definidas!", Toast.LENGTH_SHORT).show();
+
                                                         }
                                                     }
-
         );
+        return view;
     }
 
     private void criaListaAplicacoes() {
-        ListView mainListView = (ListView) findViewById(R.id.listaAplicacoes);
-        if (listaAplicacoes == null)
-            listaAplicacoes = new ArrayList<>();
+        ListView mainListView = (ListView) view.findViewById(R.id.listaAplicacoes);
+        listaAplicacoes = new ArrayList<>();
 
-        PackageManager gestorPacotes = getPackageManager();
+        PackageManager gestorPacotes = getActivity().getPackageManager();
 
         Intent i = new Intent(Intent.ACTION_MAIN, null);
         i.addCategory(Intent.CATEGORY_LAUNCHER);
 
         List<ResolveInfo> availableActivities = gestorPacotes.queryIntentActivities(i, 0);
         ItemLista aplicacao;
-        SharedPreferences preferencias = getApplicationContext().getSharedPreferences("preferenciasUtilizador" + estado, MODE_PRIVATE);
+        SharedPreferences preferencias = getActivity().getApplicationContext().getSharedPreferences("preferenciasUtilizador" + estado, Context.MODE_PRIVATE);
         Set<? extends Map.Entry<String, ?>> conjuntoPreferencias = preferencias.getAll().entrySet();
 
         for (ResolveInfo ri : availableActivities) {
@@ -134,20 +169,21 @@ public class ConfiguracoesAplicacoes extends Activity {
             aplicacao.atribuiNomePacote(ri.activityInfo.packageName);
             aplicacao.atribuiIcon(ri.activityInfo.loadIcon(gestorPacotes));
             for (Map.Entry<String, ?> entry : conjuntoPreferencias) {
-                if (entry.getValue().equals(aplicacao.devolveNome() + aplicacao.devolveNomePacote()))
+                if (entry.getValue().equals(aplicacao.devolveNome() + aplicacao.devolveNomePacote())) {
                     aplicacao.colocaSeleccionado(true);
+                }
             }
             listaAplicacoes.add(aplicacao);
         }
 
-        final ArrayAdapter<ItemLista> adaptadorLista = new AdaptadorAplicacoes(this, listaAplicacoes);
+        final ArrayAdapter<ItemLista> adaptadorLista = new AdaptadorAplicacoes(getActivity(), listaAplicacoes);
         mainListView.setAdapter(adaptadorLista);
 
-        Switch botaoSelecionarTudo = (Switch) findViewById(R.id.botaoSelecionarTudo);
-        botaoSelecionarTudo.setOnClickListener(new View.OnClickListener() {
+        Switch botaoSelecionarTudo = (Switch) view.findViewById(R.id.botaoSelecionarTudo);
+        botaoSelecionarTudo.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
-            public void onClick(View v) {
-                if(!selecionarTudo) {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (!selecionarTudo) {
                     listaAplicacoesSeleccionadas.clear();
                     for (int i = 0; i < listaAplicacoes.size(); i++) {
                         listaAplicacoes.get(i).colocaSeleccionado(true);
@@ -155,8 +191,7 @@ public class ConfiguracoesAplicacoes extends Activity {
                         listaAplicacoesSeleccionadas.add(listaAplicacoes.get(i).devolveNome() + listaAplicacoes.get(i).devolveNomePacote());
                     }
                     selecionarTudo = true;
-                }
-                else {
+                } else {
                     for (int i = 0; i < listaAplicacoes.size(); i++) {
                         listaAplicacoes.get(i).colocaSeleccionado(false);
                         adaptadorLista.notifyDataSetChanged();
@@ -164,9 +199,14 @@ public class ConfiguracoesAplicacoes extends Activity {
                     }
                     selecionarTudo = false;
                 }
-            }});
+            }
+        });
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+    }
 
     private static class AplicacaoViewHolder {
 
@@ -208,7 +248,7 @@ public class ConfiguracoesAplicacoes extends Activity {
             ImageView icon;
 
             if (convertView == null) {
-                convertView = getLayoutInflater().inflate(R.layout.item_lista_aplicacoes_albuns, null);
+                convertView = getActivity().getLayoutInflater().inflate(R.layout.item_lista_aplicacoes_albuns, null);
 
                 nomeAplicacao = (TextView) convertView.findViewById(R.id.nome_aplicacao);
                 checkBox = (CheckBox) convertView.findViewById(R.id.checkbox);
@@ -243,29 +283,50 @@ public class ConfiguracoesAplicacoes extends Activity {
         }
     }
 
+    /**
+     * @Override public void onBackPressed() {
+     * super.onBackPressed();
+     * SharedPreferences preferencias = getApplicationContext().getSharedPreferences("preferenciasUtilizador" + ConfiguracoesRespostas.estado, MODE_PRIVATE);
+     * SharedPreferences.Editor editor = preferencias.edit();
+     * for (Map.Entry<String, ?> entry : preferencias.getAll().entrySet()) {
+     * if (entry.getValue().equals(GestorAlbunsVideos.class.getName())) {
+     * editor.remove(entry.getKey());
+     * editor.commit();
+     * }
+     * if (entry.getValue().equals(DesativarAplicacoes.class.getName())) {
+     * editor.remove(entry.getKey());
+     * editor.commit();
+     * }
+     * }
+     * SharedPreferences posicoes = getApplicationContext().getSharedPreferences("posicoes" + ConfiguracoesRespostas.estado, MODE_PRIVATE);
+     * SharedPreferences.Editor editorPosicoes = posicoes.edit();
+     * for (Map.Entry<String, ?> entrada : posicoes.getAll().entrySet()) {
+     * if (entrada.getValue().equals(ConfiguracoesRespostas.listaRespostas.get(ConfiguracoesRespostas.posicao).devolveNomePacote())) {
+     * editorPosicoes.remove(entrada.getKey());
+     * editorPosicoes.commit();
+     * }
+     * }
+     * finish();
+     * }
+     **/
+
     @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-        SharedPreferences preferencias = getApplicationContext().getSharedPreferences("preferenciasUtilizador" + ConfiguracoesRespostas.estado, MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferencias.edit();
-        for (Map.Entry<String, ?> entry : preferencias.getAll().entrySet()) {
-            if (entry.getValue().equals(GestorAlbunsVideos.class.getName())) {
-                editor.remove(entry.getKey());
-                editor.commit();
-            }
-            if (entry.getValue().equals(DesativarAplicacoes.class.getName())) {
-                editor.remove(entry.getKey());
-                editor.commit();
-            }
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof OnFragmentInteractionListener) {
+        } else {
+            throw new RuntimeException(context.toString()
+                    + " must implement OnFragmentInteractionListener");
         }
-        SharedPreferences posicoes = getApplicationContext().getSharedPreferences("posicoes" + ConfiguracoesRespostas.estado, MODE_PRIVATE);
-        SharedPreferences.Editor editorPosicoes = posicoes.edit();
-        for (Map.Entry<String, ?> entrada : posicoes.getAll().entrySet()) {
-            if (entrada.getValue().equals(ConfiguracoesRespostas.listaRespostas.get(ConfiguracoesRespostas.posicao).devolveNomePacote())) {
-                editorPosicoes.remove(entrada.getKey());
-                editorPosicoes.commit();
-            }
-        }
-        finish();
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+    }
+
+    public interface OnFragmentInteractionListener {
+        // TODO: Update argument type and name
+        void onFragmentInteraction(Uri uri);
     }
 }

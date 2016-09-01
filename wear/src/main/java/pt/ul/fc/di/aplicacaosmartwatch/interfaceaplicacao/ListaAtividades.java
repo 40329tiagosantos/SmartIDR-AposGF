@@ -1,15 +1,18 @@
 package pt.ul.fc.di.aplicacaosmartwatch.interfaceaplicacao;
 
-import android.app.Activity;
+import android.app.Fragment;
+import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.graphics.BitmapFactory;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.wearable.view.WearableListView;
+import android.view.ContextThemeWrapper;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.widget.RelativeLayout;
@@ -17,52 +20,82 @@ import android.widget.TextView;
 
 import com.example.tiasa.aplicacaosmartwatch.R;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import pt.ul.fc.di.aplicacaosmartwatch.comunicacao.RecetorMensagens;
 import pt.ul.fc.di.aplicacaosmartwatch.detecao.DetetorLigacaoSmartphone;
 
-public class ListaAtividades extends Activity {
+public class ListaAtividades extends Fragment {
 
     public static ArrayList<Drawable> listaIcons;
     public static ArrayList<String> listaNomeAtividades;
+    public static ArrayList<String> listaAtividades;
     private TextView cabecalho;
     private TextView novaAtividade;
     public static AdapterListaAtividades lista;
-    public static boolean iniciouAtividade = false;
-    public static WearableListView listaAtividades;
+    public static boolean iniciouAtividade;
+    private WearableListView vistalistaAtividades;
     private int posicaoAtual;
+    public static boolean iniciouAplicacao;
     private Animation animacao;
+    private int novasAtividades;
+    private ArrayList<String> timeStampAtividade;
+    private View view;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_lista_atividades);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        view = inflater.inflate(R.layout.activity_lista_atividades, container, false);
+
         iniciouAtividade = true;
-        ListaRespostas.iniciouAplicacao = true;
-        cabecalho = (TextView) findViewById(R.id.cabecalho);
+        iniciouAplicacao = true;
+        cabecalho = (TextView) view.findViewById(R.id.cabecalho);
+        novaAtividade = (TextView) view.findViewById(R.id.novaAtividade);
 
-        novaAtividade = (TextView) findViewById(R.id.novaAtividade);
+        novaAtividade.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                vistalistaAtividades.scrollToPosition(0);
+                novaAtividade.clearAnimation();
+            }
+        });
 
-        listaAtividades = (WearableListView) findViewById(R.id.listaAtividades);
+        vistalistaAtividades = (WearableListView) view.findViewById(R.id.listaAtividades);
+        vistalistaAtividades.setGreedyTouchMode(true);
+
+        vistalistaAtividades.scrollToPosition(posicaoAtual + RecetorMensagens.numeroAtividades);
+
         listaNomeAtividades = new ArrayList<>();
-        if(getIntent().getByteArrayExtra("Icon")!=null) {
-            Drawable icon = new BitmapDrawable(getApplicationContext().getResources(), BitmapFactory.decodeByteArray(getIntent().getByteArrayExtra("Icon"), 0, getIntent().getByteArrayExtra("Icon").length));
-            listaIcons.add(0,icon);
+        timeStampAtividade = new ArrayList<>();
+
+
+        if (listaAtividades == null)
+            listaAtividades = new ArrayList<>();
+
+        if (lista != null) {
+            if (lista.getItemCount() == 40) {
+                listaAtividades.remove(0);
+            }
         }
+
         criaLista();
-        lista = new AdapterListaAtividades(this, listaNomeAtividades, listaIcons);
-        listaAtividades.setAdapter(lista);
-        listaAtividades.addOnScrollListener(mOnScrollListener);
+        lista = new AdapterListaAtividades(getActivity().getApplicationContext(), listaNomeAtividades);
+        vistalistaAtividades.setAdapter(lista);
+        vistalistaAtividades.addOnScrollListener(mOnScrollListener);
+        vistalistaAtividades.setClickListener(mClickListener);
+        return view;
     }
 
     private void criaLista() {
         listaNomeAtividades.clear();
-        SharedPreferences preferencias = getApplicationContext().getSharedPreferences("ListaAtividades", MODE_PRIVATE);
-        for (int i = 0; i < preferencias.getAll().size(); i++) {
-            listaNomeAtividades.add(preferencias.getString("atividade" + String.valueOf(i), ""));
+        for (int i = 0; i < listaAtividades.size(); i++) {
+            String nomeAtividade = listaAtividades.get(i);
+            listaNomeAtividades.add(nomeAtividade.substring(nomeAtividade.indexOf(' ') + 1));
+            timeStampAtividade.add(nomeAtividade.substring(0, nomeAtividade.indexOf(' ')));
         }
         Collections.reverse(listaNomeAtividades);
+        Collections.reverse(timeStampAtividade);
     }
 
     private WearableListView.OnScrollListener mOnScrollListener = new WearableListView.OnScrollListener() {
@@ -70,15 +103,16 @@ public class ListaAtividades extends Activity {
         public void onAbsoluteScrollChange(int i) {
             if (i >= 0)
                 cabecalho.setY(-i);
+            if (animacao != null) {
+                if (animacao.hasStarted()) {
+                    novasAtividades = 0;
+                    novaAtividade.clearAnimation();
+                }
+            }
         }
 
         @Override
         public void onScroll(int i) {
-            if (animacao != null) {
-                if (animacao.isInitialized()) {
-                    novaAtividade.clearAnimation();
-                }
-            }
         }
 
         @Override
@@ -95,40 +129,73 @@ public class ListaAtividades extends Activity {
     public void onResume() {
         super.onResume();
         iniciouAtividade = true;
-        criaLista();
-        if (posicaoAtual != 0) {
+        if (posicaoAtual != 0 && !DetalheAtividade.iniciouDetalhe) {
+            vistalistaAtividades.scrollToPosition(posicaoAtual + 1);
+            novasAtividades++;
             apresentaNotificacao();
-            listaAtividades.scrollToPosition(posicaoAtual + 1);
         }
-        lista.notifyDataSetChanged();
-        RelativeLayout layoutAtividades = (RelativeLayout) findViewById(R.id.frame_layout_atividades);
+
+        RelativeLayout layoutAtividades = (RelativeLayout) view.findViewById(R.id.frame_layout_atividades);
         String estado = DetetorLigacaoSmartphone.estado;
+        final Context contextThemeWrapper = new ContextThemeWrapper(getActivity(), R.style.BlueTheme);
         switch (estado) {
             case "ComLigacaoBT":
-                setTheme(R.style.BlueTheme);
+                contextThemeWrapper.setTheme(R.style.BlueTheme);
                 layoutAtividades.setBackgroundColor(Color.parseColor("#DDFFFF"));
                 break;
             case "ComLigacaoWF":
-                setTheme(R.style.YellowTheme);
+                contextThemeWrapper.setTheme(R.style.YellowTheme);
                 layoutAtividades.setBackgroundColor(Color.parseColor("#FFEDA8"));
                 break;
             default:
-                setTheme(R.style.RedTheme);
+                contextThemeWrapper.setTheme(R.style.RedTheme);
                 layoutAtividades.setBackgroundColor(Color.parseColor("#FC807C"));
                 break;
         }
+        DetalheAtividade.iniciouDetalhe = false;
     }
+
+    private WearableListView.ClickListener mClickListener = new WearableListView.ClickListener() {
+
+        @Override
+        public void onClick(WearableListView.ViewHolder viewHolder) {
+            Intent detalhaAtividade = new Intent(getActivity().getApplicationContext(), ConstroiFragmentos.class);
+            detalhaAtividade.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+            detalhaAtividade.putExtra("timestamp", timeStampAtividade.get(viewHolder.getLayoutPosition()));
+            detalhaAtividade.putExtra("descricao", listaNomeAtividades.get(viewHolder.getLayoutPosition()));
+            Drawable icon = listaIcons.get(viewHolder.getLayoutPosition());
+            Bitmap bitmap = ((BitmapDrawable) icon).getBitmap();
+            if (bitmap != null) {
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.PNG, 50, stream);
+                byte[] bitmapdata = stream.toByteArray();
+                detalhaAtividade.putExtra("Icon", bitmapdata);
+            }
+            startActivity(detalhaAtividade);
+        }
+
+        @Override
+        public void onTopEmptyRegionClick() {
+        }
+    };
 
     private void apresentaNotificacao() {
         animacao = new AlphaAnimation(0.0f, 1.0f);
         animacao.setDuration(500);
         animacao.setRepeatMode(Animation.REVERSE);
         animacao.setRepeatCount(Animation.INFINITE);
+        CharSequence textoNovasAtividades = novasAtividades + " new";
+        novaAtividade.setText(textoNovasAtividades);
         novaAtividade.startAnimation(animacao);
+
         animacao.setAnimationListener(new Animation.AnimationListener() {
+
+            private View itemLista;
+
             @Override
             public void onAnimationStart(Animation arg0) {
-                novaAtividade.setVisibility(View.VISIBLE);
+                itemLista = vistalistaAtividades.getChildAt(0);
+                itemLista.setVisibility(View.INVISIBLE);
             }
 
             @Override
@@ -137,34 +204,16 @@ public class ListaAtividades extends Activity {
 
             @Override
             public void onAnimationEnd(Animation arg0) {
-                novaAtividade.setVisibility(View.INVISIBLE);
+                novasAtividades = 0;
+                itemLista.setVisibility(View.VISIBLE);
             }
         });
     }
 
     @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        if(intent.getByteArrayExtra("Icon")!=null) {
-            Drawable icon = new BitmapDrawable(getApplicationContext().getResources(), BitmapFactory.decodeByteArray(intent.getByteArrayExtra("Icon"), 0, intent.getByteArrayExtra("Icon").length));
-            ListaAtividades.listaIcons.add(0,icon);
-        }
-        iniciouAtividade = true;
-        if (intent.getStringExtra("MudarFundo") != null) {
-            if (intent.getStringExtra("MudarFundo").equals("MudarFundo")) {
-                String estado = DetetorLigacaoSmartphone.estado;
-                switch (estado) {
-                    case "SemLigacao":
-                        setTheme(R.style.RedTheme);
-                        break;
-                    case "ComLigacaoBT":
-                        setTheme(R.style.BlueTheme);
-                        break;
-                    default:
-                        setTheme(R.style.YellowTheme);
-                        break;
-                }
-            }
-        }
+    public void onDestroy(){
+        super.onDestroy();
+        iniciouAplicacao=false;
+        iniciouAtividade=false;
     }
 }

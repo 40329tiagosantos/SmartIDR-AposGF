@@ -9,17 +9,22 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
+import android.webkit.URLUtil;
+import android.widget.Toast;
+
+import com.example.tiasa.aplicacaosmartwatch.R;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -27,8 +32,10 @@ import pt.ul.fc.di.aplicacaosmartphone.comunicacao.Mensagem;
 
 public class RegistoAtividades extends Service {
 
-    private String dataAtual;
     public static boolean ocorreuIntrusaoRegisAt;
+    private boolean estaEscrever;
+    private String textoEscrito = "", nomePacoteAtEscri = "", estadoAtEscri = "";
+    private FileOutputStream outStream;
 
     @Override
     public int onStartCommand(Intent intent, int flags, final int startId) {
@@ -39,109 +46,205 @@ public class RegistoAtividades extends Service {
         String nomePacote = intent.getStringExtra("nomePacote");
         String descricaoEvento = intent.getStringExtra("descricaoEvento");
         String tipoEvento = intent.getStringExtra("tipoEvento");
-        String textoEvento = intent.getStringExtra("textoEvento");
         String classeEvento = intent.getStringExtra("classeEvento");
-        iniciaRegistarAtividades(estado, nomeEvento, nomePacote, descricaoEvento, tipoEvento, textoEvento, classeEvento);
+        if (!nomePacote.equals(getPackageName()))
+            iniciaRegistarAtividades(estado, nomeEvento, nomePacote, descricaoEvento, tipoEvento, classeEvento);
         return START_NOT_STICKY;
     }
 
-    private void iniciaRegistarAtividades(String estado, String nomeEvento, String nomePacote, String descricaoEvento, String tipoEvento, String textoEvento, String classeEvento) {
-        DateFormat dateFormat = new SimpleDateFormat("ddMMyyyy");
-        Date date = new Date();
-        FileOutputStream outStream = null;
-        try {
-            dataAtual = dateFormat.format(date);
-            outStream = openFileOutput(dataAtual + "atividadesIntruso.txt", MODE_APPEND);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        BufferedWriter escritor = new BufferedWriter(new OutputStreamWriter(outStream));
+    private void iniciaRegistarAtividades(String estado, String nomeEvento, String nomePacote, String descricaoEvento, String tipoEvento, String classeEvento) {
 
-        dateFormat = new SimpleDateFormat("HH:mm:ss");
+        Date date = new Date();
+        boolean eventoValido = false;
+        String nomeFicheiroAtividades = null;
+
+        File ficheiros[] = getApplicationContext().getFilesDir().listFiles();
+        for (File ficheiro : ficheiros) {
+            if (ficheiro.getName().contains("atividadesIntruso")) {
+                nomeFicheiroAtividades = ficheiro.getName();
+                try {
+                    outStream = openFileOutput(nomeFicheiroAtividades, MODE_APPEND);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        BufferedWriter escritor = null;
+        if (outStream != null) {
+            escritor = new BufferedWriter(new OutputStreamWriter(outStream));
+        }
 
         StringBuilder linha = new StringBuilder();
         if (!tipoEvento.equals("")) {
             linha.append("Atividade: ");
-            String etiqueta = dateFormat.format(date);
             try {
-                if (tipoEvento.equals("TYPE_VIEW_CLICKED")) {
-                    if (!nomeEvento.equals("") && !nomePacote.equals("com.android.systemui")) {
-                        escritor.write((etiqueta + " "));
-                        escritor.write((nomePacote + " "));
-                        linha.append(etiqueta + " ");
-                        linha.append("Seleccionou: " + nomeEvento + '\n');
-                        linha.append(nomePacote);
-                        escritor.write(("Seleccionou: " + nomeEvento));
-                        escritor.newLine();
-                    } else if (!descricaoEvento.equals("") && !nomePacote.equals("com.android.systemui")) {
-                        if (!devolveUltimaLinha(dataAtual).contains(descricaoEvento)) {
-                            escritor.write((etiqueta + " "));
-                            escritor.write((nomePacote + " "));
-                            linha.append(etiqueta + " ");
-                            linha.append("Seleccionou: " + nomeEvento + " " + descricaoEvento + '\n');
+                switch (tipoEvento) {
+
+                    case "TYPE_VIEW_CLICKED":
+                        estaEscrever = false;
+                        if (!textoEscrito.equals("") && !estaEscrever) {
+                            enviaMensagemAtividade(textoEscrito, nomePacoteAtEscri, estadoAtEscri);
+                            escritor.write(textoEscrito.replace("Atividade: ", ""));
+                            escritor.newLine();
+                            textoEscrito = "";
+                            nomePacoteAtEscri = "";
+                            estadoAtEscri = "";
+                        }
+                        if (!nomeEvento.equals("") && descricaoEvento.equals("") && !nomePacote.equals("com.android.systemui") && classeEvento.contains("EditText")) {
+                            if (!devolveUltimaLinha(nomeFicheiroAtividades).contains(nomeEvento)) {
+                                linha.append(date.getTime()).append(" Selected: ");
+                                linha.append(nomeEvento).append(" ");
+                                linha.append(nomePacote);
+                                escritor.write(linha.toString().replace("Atividade: ", ""));
+                                escritor.newLine();
+                            }
+                        } else if (!descricaoEvento.equals("") && !nomeEvento.equals("") && !nomePacote.equals("com.android.systemui") && !classeEvento.contains("ImageButton")) {
+                            linha.append(date.getTime()).append(" Selected: ");
+                            linha.append(nomeEvento).append(" ");
                             linha.append(nomePacote);
-                            escritor.write(("Seleccionou: " + nomeEvento + " " + descricaoEvento));
+                            escritor.write(linha.toString().replace("Atividade: ", ""));
+                            escritor.newLine();
+                        } else if (!nomeEvento.equals("") && descricaoEvento.equals("") && !nomePacote.equals("com.android.systemui")) {
+                            linha.append(date.getTime()).append(" Opened: ");
+                            linha.append(nomeEvento).append(" ");
+                            linha.append(nomePacote);
+                            escritor.write(linha.toString().replace("Atividade: ", ""));
+                            escritor.newLine();
+                        } else if (!descricaoEvento.equals("") && nomeEvento.equals("") && !nomePacote.equals("com.android.systemui") && !classeEvento.contains("ImageButton")) {
+                            if (!devolveUltimaLinha(nomeFicheiroAtividades).contains(descricaoEvento)) {
+                                linha.append(date.getTime()).append(" Selected: ");
+                                linha.append(nomeEvento).append(" ").append(descricaoEvento).append(" ");
+                                linha.append(nomePacote);
+                                escritor.write(linha.toString().replace("Atividade: ", ""));
+                                escritor.newLine();
+                            }
+                        }
+                        eventoValido = true;
+                        break;
+
+                    case "TYPE_VIEW_SELECTED":
+                        estaEscrever = false;
+
+                        if (!textoEscrito.equals("") && !estaEscrever) {
+                            enviaMensagemAtividade(textoEscrito, nomePacoteAtEscri, estadoAtEscri);
+                            escritor.write(textoEscrito.replace("Atividade: ", ""));
+                            escritor.newLine();
+                            textoEscrito = "";
+                            nomePacoteAtEscri = "";
+                            estadoAtEscri = "";
+                        }
+                        if (!descricaoEvento.equals("")) {
+                            if (!devolveUltimaLinha(nomeFicheiroAtividades).contains("Closed: " + descricaoEvento)) {
+                                linha.append(date.getTime()).append(" Closed: ");
+                                linha.append(descricaoEvento).append(" ");
+                                linha.append(nomePacote);
+
+                                escritor.write(linha.toString().replace("Atividade: ", ""));
+                                escritor.newLine();
+                            }
+                        } else if (!nomeEvento.equals("")) {
+                            if (!devolveUltimaLinha(nomeFicheiroAtividades).contains(nomeEvento) && !classeEvento.contains("Launcher")) {
+                                linha.append(date.getTime()).append(" Selected: ");
+                                linha.append(nomeEvento).append(" ");
+                                linha.append(nomePacote);
+                                escritor.write(linha.toString().replace("Atividade: ", ""));
+                                escritor.newLine();
+                            }
+                        }
+                        eventoValido = true;
+                        break;
+                    case "TYPE_VIEW_TEXT_SELECTION_CHANGED":
+                        estaEscrever = false;
+
+                        if (!nomeEvento.equals("")) {
+                            if (!devolveUltimaLinha(nomeFicheiroAtividades).contains(nomeEvento) && classeEvento.contains("EditText") && URLUtil.isValidUrl(nomeEvento)) {
+                                linha.append(date.getTime()).append(" Acceded: ");
+                                linha.append(nomeEvento).append(" ");
+                                linha.append(nomePacote);
+                                escritor.write(linha.toString().replace("Atividade: ", ""));
+                                escritor.newLine();
+                            }
+                        }
+                        eventoValido = true;
+                        break;
+
+                    case "TYPE_VIEW_TEXT_CHANGED":
+                        if (!nomeEvento.equals("")) {
+                            linha.append(date.getTime()).append(" Wrote: ");
+                            linha.append(nomeEvento).append(" ");
+                            linha.append(nomePacote);
+
+                            textoEscrito = linha.toString();
+                            nomePacoteAtEscri = nomePacote;
+                            estadoAtEscri = estado;
+                            estaEscrever = true;
+                        }
+                        eventoValido = true;
+                        break;
+
+                    case "TYPE_WINDOW_STATE_CHANGED":
+                        estaEscrever = false;
+                        if (!textoEscrito.equals("") && !estaEscrever) {
+                            enviaMensagemAtividade(textoEscrito, nomePacoteAtEscri, estadoAtEscri);
+                            escritor.write(textoEscrito.replace("Atividade: ", ""));
+                            escritor.newLine();
+                            textoEscrito = "";
+                            nomePacoteAtEscri = "";
+                            estadoAtEscri = "";
+                        }
+                        if (!descricaoEvento.equals("")) {
+                            linha.append(date.getTime()).append(" Viewed: ");
+                            linha.append(descricaoEvento).append(" ");
+                            linha.append(nomePacote);
+                            escritor.write(linha.toString().replace("Atividade: ", ""));
                             escritor.newLine();
                         }
-                    }
+                        eventoValido = true;
+                        break;
                 }
-                if (tipoEvento.equals("TYPE_VIEW_TEXT_CHANGED")) {
-                    linha.append(etiqueta + " ");
-                    escritor.write((etiqueta + " "));
-                    escritor.write((nomePacote + " "));
-                    linha.append("Escreveu: " + nomeEvento + '\n');
-                    linha.append(nomePacote);
-                    escritor.write(("Escreveu: " + nomeEvento));
-                    escritor.newLine();
-                }
-                if (tipoEvento.equals("TYPE_WINDOW_STATE_CHANGED")) {
-                    if (!descricaoEvento.equals("")) {
-                        escritor.write((etiqueta + " "));
-                        escritor.write((nomePacote + " "));
-                        linha.append(etiqueta + " ");
-                        linha.append("Visualizou: " + descricaoEvento + '\n');
-                        linha.append(nomePacote);
-                        escritor.write(("Visualizou: " + descricaoEvento));
-                        escritor.newLine();
-                    }
+                if (!estaEscrever && eventoValido) {
+                    enviaMensagemAtividade(linha.toString(), nomePacote, estado);
                 }
 
-                if (tipoEvento.equals("TYPE_VIEW_SELECTED")) {
-                    if (!descricaoEvento.equals("")) {
-                        if (!devolveUltimaLinha(dataAtual).contains("Fechou: " + descricaoEvento)) {
-                            linha.append(etiqueta + " ");
-                            linha.append("Fechou: " + descricaoEvento + '\n');
-                            linha.append(nomePacote);
-                            escritor.write((etiqueta + " "));
-                            escritor.write((nomePacote + " "));
-                            escritor.write(("Fechou: " + descricaoEvento));
-                            escritor.newLine();
-                        }
-                    }
-                }
                 escritor.close();
-                outStream.close();
-                enviaMensagemAtividade(linha, nomePacote, estado);
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            try {
+                outStream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
         }
     }
 
-    private boolean enviaMensagemAtividade(StringBuilder linha, String nomePacote, String estado) {
-        Intent i = new Intent(Intent.ACTION_MAIN, null);
-        i.addCategory(Intent.CATEGORY_LAUNCHER);
+    private boolean enviaMensagemAtividade(String linha, String nomePacote, String estado) {
+        Intent aplicacoesLauncher = new Intent(Intent.ACTION_MAIN, null);
+        aplicacoesLauncher.addCategory(Intent.CATEGORY_LAUNCHER);
         PackageManager gestorPacotes = getPackageManager();
-        List<ResolveInfo> availableActivities = gestorPacotes.queryIntentActivities(i, 0);
+        List<ResolveInfo> availableActivities = gestorPacotes.queryIntentActivities(aplicacoesLauncher, 0);
 
+        if (linha.contains("Wrote") && !estado.equals("SemLigacao")) {
+            Drawable icon = ContextCompat.getDrawable(getApplicationContext(), R.drawable.iconescrita);
+            Bitmap bitmap = ((BitmapDrawable) icon).getBitmap();
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            bitmap = Bitmap.createScaledBitmap(bitmap, 55, 55, true);
+            bitmap.compress(Bitmap.CompressFormat.PNG, 50, stream);
+            byte[] bitmapdata = stream.toByteArray();
+            Mensagem mensagemAtividade = new Mensagem(linha.replace(nomePacote, ""), bitmapdata, getApplication());
+            mensagemAtividade.enviaMensagemDados();
+            return true;
+        }
         for (ResolveInfo ri : availableActivities) {
-            if (linha.toString().contains(ri.loadLabel(gestorPacotes).toString())) {
+            if (linha.contains(ri.activityInfo.packageName) && !linha.contains("Closed")) {
                 Drawable icon = ri.activityInfo.loadIcon(gestorPacotes);
                 Bitmap bitmap = ((BitmapDrawable) icon).getBitmap();
                 ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.PNG, 70, stream);
+                bitmap = Bitmap.createScaledBitmap(bitmap, 55, 55, true);
+                bitmap.compress(Bitmap.CompressFormat.PNG, 50, stream);
                 byte[] bitmapdata = stream.toByteArray();
-                Mensagem mensagemAtividade = new Mensagem(linha.toString().replace(nomePacote, ""), bitmapdata, getApplication());
+                Mensagem mensagemAtividade = new Mensagem(linha.replace(nomePacote, ""), bitmapdata, getApplication());
                 mensagemAtividade.enviaMensagemDados();
                 try {
                     stream.close();
@@ -149,14 +252,14 @@ public class RegistoAtividades extends Service {
                     e.printStackTrace();
                 }
                 return true;
-            }
-            if (linha.toString().contains(ri.activityInfo.packageName)) {
+            } else if (linha.contains(ri.loadLabel(gestorPacotes).toString())) {
                 Drawable icon = ri.activityInfo.loadIcon(gestorPacotes);
                 Bitmap bitmap = ((BitmapDrawable) icon).getBitmap();
                 ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.PNG, 70, stream);
+                bitmap = Bitmap.createScaledBitmap(bitmap, 55, 55, true);
+                bitmap.compress(Bitmap.CompressFormat.PNG, 50, stream);
                 byte[] bitmapdata = stream.toByteArray();
-                Mensagem mensagemAtividade = new Mensagem(linha.toString().replace(nomePacote, ""), bitmapdata, getApplication());
+                Mensagem mensagemAtividade = new Mensagem(linha.replace(nomePacote, ""), bitmapdata, getApplication());
                 mensagemAtividade.enviaMensagemDados();
                 try {
                     stream.close();
@@ -166,19 +269,18 @@ public class RegistoAtividades extends Service {
                 return true;
             }
         }
-        if (!linha.toString().equals("Atividade: ") && !estado.equals("SemLigacao")) {
-            Mensagem mensagemAtividade = new Mensagem(linha.toString().replace(nomePacote, ""), getApplication());
+        if (!linha.equals("Atividade: ") && !estado.equals("SemLigacao")) {
+            Mensagem mensagemAtividade = new Mensagem(linha.replace(nomePacote, ""), getApplication());
             mensagemAtividade.enviaMensagem();
-            return true;
         }
         return true;
     }
 
-    private String devolveUltimaLinha(String dataAtual) {
+    private String devolveUltimaLinha(String nomeFicheiro) {
         String ultimaLinha = "";
         String linhaActual;
         try {
-            FileInputStream ficheiroAtividades = openFileInput(dataAtual + "atividadesIntruso.txt");
+            FileInputStream ficheiroAtividades = openFileInput(nomeFicheiro);
             BufferedReader leitorFicheiroAtividades = new BufferedReader(new InputStreamReader(ficheiroAtividades));
             while ((linhaActual = leitorFicheiroAtividades.readLine()) != null) {
                 ultimaLinha = linhaActual;

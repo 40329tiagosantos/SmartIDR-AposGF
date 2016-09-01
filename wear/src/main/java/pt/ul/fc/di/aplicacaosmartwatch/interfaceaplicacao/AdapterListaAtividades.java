@@ -1,7 +1,6 @@
 package pt.ul.fc.di.aplicacaosmartwatch.interfaceaplicacao;
 
 import android.content.Context;
-import android.graphics.drawable.Drawable;
 import android.support.wearable.view.CircledImageView;
 import android.support.wearable.view.WearableListView;
 import android.view.LayoutInflater;
@@ -16,14 +15,12 @@ import java.util.ArrayList;
 public class AdapterListaAtividades extends WearableListView.Adapter {
 
     public static ArrayList<String> listaAtividades;
-    public static ArrayList<Drawable> listaIcons;
-
     private final LayoutInflater mInflater;
 
-    public AdapterListaAtividades(Context context, ArrayList<String> items, ArrayList<Drawable> listaIc) {
+    public AdapterListaAtividades(Context context, ArrayList<String> listaAtividades) {
         mInflater = LayoutInflater.from(context);
-        listaAtividades = items;
-        this.listaIcons=listaIc;
+        AdapterListaAtividades.listaAtividades = listaAtividades;
+
     }
 
     @Override
@@ -35,9 +32,9 @@ public class AdapterListaAtividades extends WearableListView.Adapter {
     public void onBindViewHolder(WearableListView.ViewHolder viewHolder, int position) {
         ItemViewHolder itemViewHolder = (ItemViewHolder) viewHolder;
         CircledImageView circledView = itemViewHolder.iconAtividade;
-        circledView.setImageDrawable(listaIcons.get(position));
         TextView textView = itemViewHolder.nomeAtividade;
         textView.setText(listaAtividades.get(position));
+        circledView.setImageDrawable(ListaAtividades.listaIcons.get(position));
     }
 
 

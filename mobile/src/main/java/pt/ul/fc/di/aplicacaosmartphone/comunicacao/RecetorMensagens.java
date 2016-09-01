@@ -2,121 +2,98 @@ package pt.ul.fc.di.aplicacaosmartphone.comunicacao;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.util.Log;
 
 import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.WearableListenerService;
 
+import java.io.BufferedWriter;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.util.Date;
 import java.util.Map;
 
+import pt.ul.fc.di.aplicacaosmartphone.relatorio.ListaAtividadesSmartIDR;
+import pt.ul.fc.di.aplicacaosmartphone.relatorio.MenuPrincipal;
+import pt.ul.fc.di.aplicacaosmartphone.respostas.Bloquear;
 import pt.ul.fc.di.aplicacaosmartphone.respostas.FotografarIntruso;
 
 public class RecetorMensagens extends WearableListenerService {
 
-    public static boolean modoPartilha = false;
-    private static boolean ativado = false;
-    public static boolean comecouDesativarAplicacoes;
+    public static boolean modoPartilha;
+    private static boolean ativado;
     public static boolean comecouRegistoAtividades;
-    public static boolean comecouNotificacao;
-    public static boolean comecouFotografar;
-    public static boolean comecouAlarmeSonoro;
-    public static boolean comecouApresentarMensagem;
+    private static String nome;
 
     @Override
     public void onMessageReceived(MessageEvent messageEvent) {
         String mensagem = messageEvent.getPath();
+
         Intent resposta = null;
+        Intent listaSmartIDR = new Intent(getApplicationContext(), MenuPrincipal.class);
+        listaSmartIDR.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        listaSmartIDR.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
         if (!mensagem.equals("AtivarModoPartilha")) {
+            Mensagem mensagemResposta;
             String pacote = "pt.ul.fc.di.aplicacaosmartphone.respostas";
 
-            try {
-                resposta = new Intent(getApplicationContext(), Class.forName(pacote + '.' + mensagem));
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            }
-            Mensagem mensagemResposta;
-            if (mensagem.equals("DesativarAplicacoes") && !comecouDesativarAplicacoes) {
-                mensagemResposta = new Mensagem("✓ Desativou as aplicações com sucesso!", getApplication());
-                mensagemResposta.enviaMensagem();
-                comecaDesativarAplicacoes("SemLigacao");
-                comecaDesativarAplicacoes("Partilha");
-                comecouDesativarAplicacoes = true;
-            } else if (mensagem.equals("DesativarAplicacoes") && comecouDesativarAplicacoes) {
-                mensagemResposta = new Mensagem("✓ Ativou as aplicações com sucesso!", getApplication());
-                mensagemResposta.enviaMensagem();
-                paraDesativarAplicacoes("SemLigacao");
-                paraDesativarAplicacoes("Partilha");
-                comecouDesativarAplicacoes = false;
-            } else if (mensagem.equals("RegistoAtividades") && !comecouRegistoAtividades) {
-                mensagemResposta = new Mensagem("✓ Registo de atividades do intruso ativado com sucesso!", getApplication());
-                mensagemResposta.enviaMensagem();
-                comecaRegistarAtividades("ComLigacaoBT");
-                comecouRegistoAtividades = true;
-            } else if (mensagem.equals("RegistoAtividades") && comecouRegistoAtividades) {
-                mensagemResposta = new Mensagem("✓ Registo de atividades do intruso desativado com sucesso!", getApplication());
-                mensagemResposta.enviaMensagem();
+            if (mensagem.equals("ParaRegistoAtividades") && comecouRegistoAtividades) {
                 paraRegistarAtividades("ComLigacaoBT");
+                escreveFicheiroAtividadesSmartIDR("Remote Action: Stop Monitoring");
                 comecouRegistoAtividades = false;
-            } else if (mensagem.equals("Notificacao") && !comecouNotificacao) {
-                mensagemResposta = new Mensagem("✓ Notificação de Intrusão ativada com sucesso!", getApplication());
-                mensagemResposta.enviaMensagem();
-                comecaNotificacao("ComLigacaoBT");
-                comecouNotificacao = true;
-            } else if (mensagem.equals("Notificacao") && comecouNotificacao) {
-                mensagemResposta = new Mensagem("✓ Notificação de Intrusão desativada com sucesso!", getApplication());
-                mensagemResposta.enviaMensagem();
-                paraNotificacao("ComLigacaoBT");
-                comecouNotificacao = false;
-            } else if (mensagem.equals("AlarmeSonoro") && !comecouAlarmeSonoro) {
-                mensagemResposta = new Mensagem("✓ Alarme Sonoro ativado com sucesso!", getApplication());
-                mensagemResposta.enviaMensagem();
-                comecaAlarmeSonoro("ComLigacaoBT");
-                comecouAlarmeSonoro = true;
-            } else if (mensagem.equals("AlarmeSonoro") && comecouAlarmeSonoro) {
-                mensagemResposta = new Mensagem("✓ Alarme Sonoro desativado com sucesso!", getApplication());
-                mensagemResposta.enviaMensagem();
-                paraAlarmeSonoro("ComLigacaoBT");
-                comecouAlarmeSonoro = false;
-            } else if (mensagem.equals("ExibirMensagemTexto") && !comecouApresentarMensagem) {
-                if (!getApplicationContext().getFileStreamPath("MensagemPartilha").exists()) {
-                    mensagemResposta = new Mensagem("Definir mensagem de texto no Modo de Partilha Controlada!", getApplication());
-                    mensagemResposta.enviaMensagem();
-                } else {
-                    mensagemResposta = new Mensagem("✓ Exibição de Mensagem de Texto ativada com sucesso!", getApplication());
-                    mensagemResposta.enviaMensagem();
-                    comecaApresentarMensagem("Partilha");
-                    comecouApresentarMensagem = true;
+            } else if (mensagem.equals("IniciaRegistoAtividades") && !comecouRegistoAtividades) {
+                comecaRegistarAtividades("ComLigacaoBT");
+                escreveFicheiroAtividadesSmartIDR("Remote Action: Start Monitoring");
+                comecouRegistoAtividades = true;
+            } else if (mensagem.equals("Bloquear")) {
+                try {
+                    resposta = new Intent(getApplicationContext(), Class.forName(pacote + '.' + mensagem));
+                    resposta.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    resposta.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                    resposta.putExtra("estado", "ComLigacaoBT");
+                    startService(resposta);
+                    if (Bloquear.bloqueado) {
+                        escreveFicheiroAtividadesSmartIDR("Remote Action: Unbrick");
+                    } else
+                        escreveFicheiroAtividadesSmartIDR("Remote Action: Brick");
+
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
                 }
-            } else if (mensagem.equals("ExibirMensagemTexto") && comecouApresentarMensagem) {
-                if (!getApplicationContext().getFileStreamPath("MensagemPartilha").exists()) {
-                    mensagemResposta = new Mensagem("Definir mensagem de texto no Modo de Partilha Controlada!", getApplication());
-                    mensagemResposta.enviaMensagem();
-                } else {
-                    mensagemResposta = new Mensagem("✓ Exbiição de Mensagem de Texto desativada com sucesso!", getApplication());
-                    mensagemResposta.enviaMensagem();
-                    paraApresentarMensagem("Partilha");
-                    comecouApresentarMensagem = false;
+
+            } else if (mensagem.equals("DesativarAplicacao")) {
+                Intent minimiza = new Intent(Intent.ACTION_MAIN);
+                minimiza.addCategory(Intent.CATEGORY_HOME);
+                minimiza.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(minimiza);
+                mensagemResposta = new Mensagem("DesativarAplicacao", getApplication());
+                mensagemResposta.enviaMensagem();
+                escreveFicheiroAtividadesSmartIDR("Remote Action: Home");
+            } else if (mensagem.equals("PedirAutenticacao")) {
+                try {
+                    resposta = new Intent(getApplicationContext(), Class.forName(pacote + '.' + mensagem));
+                    resposta.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    resposta.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                    resposta.putExtra("estado", "ComLigacaoBT");
+                    startService(resposta);
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
                 }
-            } else if (mensagem.equals("IniciarFotografarIntruso") && !comecouFotografar) {
-                mensagemResposta = new Mensagem("✓ Tirar Fotografia do intruso ativado com sucesso!", getApplication());
+                escreveFicheiroAtividadesSmartIDR("Remote Action: Lock");
+
+            } else if (mensagem.equals("AbrirConfiguracoes")) {
+                mensagemResposta = new Mensagem("AbrirConfiguracoes", getApplication());
                 mensagemResposta.enviaMensagem();
-                comecaFotografarIntruso("ComLigacaoBT");
-                comecouFotografar = true;
-            } else if (mensagem.equals("IniciarFotografarIntruso") && comecouFotografar) {
-                mensagemResposta = new Mensagem("✓ Tirar Fotografia do intruso desativado com sucesso!", getApplication());
-                mensagemResposta.enviaMensagem();
-                paraFotografarIntruso("ComLigacaoBT");
-                comecouFotografar = false;
-            } else if (!mensagem.equals("GestorAlbunsFotografias") && !mensagem.equals("GestorAlbunsVideos")) {
+                escreveFicheiroAtividadesSmartIDR("Remote Action: Setup Sharing Mode");
+                resposta = new Intent(getApplicationContext(), MenuPrincipal.class);
                 resposta.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 resposta.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                resposta.putExtra("estado","ComLigacaoBT");
-                startService(resposta);
-            } else {
-                resposta.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                resposta.putExtra("estado","ComLigacaoBT");
-                startService(resposta);
-            }
+                resposta.putExtra("estado", "Partilha");
+                startActivity(resposta);
+               }
+            if (ListaAtividadesSmartIDR.iniciouListaSmartIDR&&!mensagem.equals("DesativarAplicacao"))
+                startActivity(listaSmartIDR);
         } else {
             String estado = "Partilha";
             SharedPreferences prefs = getApplicationContext().getSharedPreferences("preferenciasUtilizador" + estado, MODE_PRIVATE);
@@ -136,26 +113,27 @@ public class RecetorMensagens extends WearableListenerService {
                             }
 
                             String nomeResposta = entry.getValue().toString();
-                            Log.w(nomeResposta,nomeResposta);
+
                             if (nomeResposta.contains("FotografarIntruso")) {
                                 comecaFotografarIntruso(estado);
                             } else if (nomeResposta.contains("DesativarAplicacoes")) {
                                 comecaDesativarAplicacoes(estado);
                             } else if (nomeResposta.contains("MensagemTexto")) {
                                 comecaApresentarMensagem(estado);
-                            } else if (nomeResposta.contains("RegistoAtividades")){
+                            } else if (nomeResposta.contains("RegistoAtividades")) {
                                 comecaRegistarAtividades(estado);
-                            } else if (nomeResposta.contains("Notificacao")) {
-                                comecaNotificacao(estado);
-                            } else if (nomeResposta.contains("AlarmeSonoro")) {
+                            }  else if (nomeResposta.contains("AlarmeSonoro")) {
                                 comecaAlarmeSonoro(estado);
-                            }else {
+                            } else {
                                 startService(resposta);
                                 modoPartilha = false;
                             }
                         }
                     }
                     ativado = true;
+                    Mensagem estadoPartilhaControlada = new Mensagem("ModoPartilhaControladaAtivado", getApplication());
+                    estadoPartilhaControlada.enviaMensagem();
+                    escreveFicheiroAtividadesSmartIDR("Remote Action: Enable Sharing Mode");
                 } else {
                     for (Map.Entry<String, ?> entry : conjuntoPreferencias.entrySet()) {
                         if (entry.getKey().contains("resposta")) {
@@ -167,7 +145,6 @@ public class RecetorMensagens extends WearableListenerService {
                                 e.printStackTrace();
                             }
                             modoPartilha = false;
-
                             String nomeResposta = entry.getValue().toString();
                             if (nomeResposta.contains("FotografarIntruso")) {
                                 paraFotografarIntruso(estado);
@@ -177,25 +154,46 @@ public class RecetorMensagens extends WearableListenerService {
                                 paraApresentarMensagem(estado);
                             } else if (nomeResposta.contains("RegistoAtividades")) {
                                 paraRegistarAtividades(estado);
-                            } else if (nomeResposta.contains("Notificacao")) {
-                                paraNotificacao(estado);
                             } else if (nomeResposta.contains("AlarmeSonoro")) {
-                                paraNotificacao(estado);
-                            }  else {
+                                paraAlarmeSonoro(estado);
+                            } else {
                                 startService(resposta);
                             }
                         }
                     }
                     ativado = false;
+                    Mensagem estadoPartilhaControlada = new Mensagem("ModoPartilhaControladaDesativado", getApplication());
+                    estadoPartilhaControlada.enviaMensagem();
+                    escreveFicheiroAtividadesSmartIDR("Remote Action: Disable Sharing Mode");
                 }
             } else {
-                Mensagem mensagemResposta = new Mensagem("Tem de criar um perfil no Modo de Partilha Controlada!", getApplication());
+                Mensagem mensagemResposta = new Mensagem("ModoPartilhaControladaNaoConfigurado", getApplication());
                 mensagemResposta.enviaMensagem();
             }
-            Mensagem estadoPartilhaControlada = new Mensagem("ModoPartilhaControlada",getApplication());
-            estadoPartilhaControlada.enviaMensagem();
         }
 
+    }
+
+    private void escreveFicheiroAtividadesSmartIDR(String atividade) {
+        FileOutputStream outStream = null;
+        try {
+            outStream = openFileOutput("atividadesSmartIDR.txt", MODE_APPEND);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Date data = new Date();
+        BufferedWriter escritor = new BufferedWriter(new OutputStreamWriter(outStream));
+        try {
+            escritor.write(data.getTime() + " " + atividade);
+            escritor.newLine();
+            escritor.close();
+            outStream.close();
+            SharedPreferences.Editor editor = getApplicationContext().getSharedPreferences("nome", MODE_PRIVATE).edit();
+            editor.putString(String.valueOf(data.getTime()),nome);
+            editor.commit();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void comecaDesativarAplicacoes(String estado) {
@@ -214,6 +212,15 @@ public class RecetorMensagens extends WearableListenerService {
         SharedPreferences.Editor editor = getApplicationContext().getSharedPreferences("preferenciasUtilizador" + estado, MODE_PRIVATE).edit();
         editor.putString("RegistoAtividades", "RegistoAtividades");
         editor.commit();
+        FileOutputStream outStream;
+        try {
+            Date date = new Date();
+            nome= String.valueOf(date.getTime()) + " atividadesIntruso.txt";
+            outStream = openFileOutput(nome, MODE_PRIVATE);
+            outStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void comecaAlarmeSonoro(String estado) {
@@ -228,11 +235,7 @@ public class RecetorMensagens extends WearableListenerService {
         editor.commit();
     }
 
-    private void comecaNotificacao(String estado) {
-        SharedPreferences.Editor editor = getApplicationContext().getSharedPreferences("preferenciasUtilizador" + estado, MODE_PRIVATE).edit();
-        editor.putString("Notificacao", "Notificacao");
-        editor.commit();
-    }
+
 
     private void paraAlarmeSonoro(String estado) {
         SharedPreferences.Editor editor = getApplicationContext().getSharedPreferences("preferenciasUtilizador" + estado, MODE_PRIVATE).edit();
@@ -240,11 +243,7 @@ public class RecetorMensagens extends WearableListenerService {
         editor.commit();
     }
 
-    private void paraNotificacao(String estado) {
-        SharedPreferences.Editor editor = getApplicationContext().getSharedPreferences("preferenciasUtilizador" + estado, MODE_PRIVATE).edit();
-        editor.remove("Notificacao");
-        editor.commit();
-    }
+
 
     private void paraRegistarAtividades(String estado) {
         SharedPreferences.Editor editor = getApplicationContext().getSharedPreferences("preferenciasUtilizador" + estado, MODE_PRIVATE).edit();

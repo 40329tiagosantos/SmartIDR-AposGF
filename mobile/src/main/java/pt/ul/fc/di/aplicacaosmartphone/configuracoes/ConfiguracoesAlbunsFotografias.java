@@ -1,20 +1,23 @@
 package pt.ul.fc.di.aplicacaosmartphone.configuracoes;
 
-import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Environment;
-import android.text.SpannableString;
-import android.text.style.RelativeSizeSpan;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v7.app.AppCompatActivity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Switch;
@@ -29,41 +32,45 @@ import java.util.List;
 import java.util.Map;
 
 import pt.ul.fc.di.aplicacaosmartphone.relatorio.ItemLista;
+import pt.ul.fc.di.aplicacaosmartphone.relatorio.ListaAtividadesSmartIDR;
 import pt.ul.fc.di.aplicacaosmartphone.respostas.GestorAlbunsFotografias;
 
-public class ConfiguracoesAlbunsFotografias extends Activity {
+public class ConfiguracoesAlbunsFotografias extends Fragment {
 
     private ArrayList<ItemLista> listaAlbuns;
     private ArrayList<String> listaAlbunsSeleccionados;
-    private String estado;
+    public static String estado;
     private SharedPreferences preferenciasAlbunsFotografias;
     private Map<String, ?> conjuntoPreferenciasAlbunsFotografias;
     private boolean selecionarTudo;
+    private View view;
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_lista_albuns);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        view = inflater.inflate(R.layout.activity_lista_albuns, container, false);
+        Bundle bundle = this.getArguments();
+        if (bundle != null) {
+            estado = bundle.getString("estado");
+        }
 
         listaAlbunsSeleccionados = new ArrayList<>();
-        Button botaoConfirmarAlbuns = (Button) findViewById(R.id.botaoConfirmarAlbuns);
+        Button botaoConfirmarAlbuns = (Button) view.findViewById(R.id.botaoConfirmarAlbuns);
 
-        TextView cabecalho = (TextView) findViewById(R.id.cabecalho);
-
-        estado = getIntent().getStringExtra("estado");
+        TextView cabecalho = (TextView) view.findViewById(R.id.cabecalho);
 
         if (estado.equals("SemLigacao"))
-            cabecalho.append("Modo Sem Ligação");
+            ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle("Set out of reach mode");
+
 
         if (estado.equals("Partilha"))
-            cabecalho.append("Modo de Partilha Controlada");
+            ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle("Set sharing mode");
 
-        SpannableString nomeRespostaEditado = new SpannableString(cabecalho.getText().toString());
-        nomeRespostaEditado.setSpan(new RelativeSizeSpan(1.2f), 0, nomeRespostaEditado.length(), 0);
-        cabecalho.setText(nomeRespostaEditado);
-        cabecalho.append("\nOcultar Álbuns de Fotografias");
+        if (estado.equals("QuickLaunch"))
+            ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle("Set quick launch");
 
-        preferenciasAlbunsFotografias = getApplicationContext().getSharedPreferences("preferenciasUtilizador" + estado, MODE_PRIVATE);
+        cabecalho.append("Hide photo albums");
+
+        preferenciasAlbunsFotografias = getActivity().getApplicationContext().getSharedPreferences("preferenciasUtilizador" + estado, Context.MODE_PRIVATE);
         conjuntoPreferenciasAlbunsFotografias = preferenciasAlbunsFotografias.getAll();
 
         criaListaAlbunsFotografias();
@@ -71,13 +78,13 @@ public class ConfiguracoesAlbunsFotografias extends Activity {
         botaoConfirmarAlbuns.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                SharedPreferences preferencias = getApplicationContext().getSharedPreferences("preferenciasUtilizador" + estado, MODE_PRIVATE);
-                SharedPreferences.Editor editor = getApplicationContext().getSharedPreferences("preferenciasUtilizador" + estado, MODE_PRIVATE).edit();
+                SharedPreferences preferencias = getActivity().getApplicationContext().getSharedPreferences("preferenciasUtilizador" + estado, Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = getActivity().getApplicationContext().getSharedPreferences("preferenciasUtilizador" + estado, Context.MODE_PRIVATE).edit();
 
                 int numeroAlbunsEscolhidos = 0;
 
                 for (Map.Entry<String, ?> entry : preferencias.getAll().entrySet()) {
-                    if (entry.getKey().toString().contains("preferenciaAlbunsFotografias")) {
+                    if (entry.getKey().contains("preferenciaAlbunsFotografias")) {
                         numeroAlbunsEscolhidos++;
                     }
                 }
@@ -93,33 +100,68 @@ public class ConfiguracoesAlbunsFotografias extends Activity {
                     }
                 }
 
-                for (int i = numeroAlbunsEscolhidos; i < numeroAlbunsEscolhidos+listaAlbunsSeleccionados.size(); i++) {
-                    for(int j = 0; j<listaAlbuns.size();j++){
-                        if(listaAlbunsSeleccionados.get(i-numeroAlbunsEscolhidos).contains(listaAlbuns.get(j).devolveNomePacote())) {
+                for (int i = numeroAlbunsEscolhidos; i < numeroAlbunsEscolhidos + listaAlbunsSeleccionados.size(); i++) {
+                    for (int j = 0; j < listaAlbuns.size(); j++) {
+                        if (listaAlbunsSeleccionados.get(i - numeroAlbunsEscolhidos).contains(listaAlbuns.get(j).devolveNomePacote())) {
                             editor.putString("preferenciaAlbunsFotografias" + j, listaAlbunsSeleccionados.get(i - numeroAlbunsEscolhidos));
                             editor.commit();
                         }
                     }
                 }
+                if (!estado.equals("QuickLaunch")) {
 
-
-                SharedPreferences posicoes = getApplicationContext().getSharedPreferences("posicoes" + ConfiguracoesRespostas.estado, MODE_PRIVATE);
-                SharedPreferences.Editor editorPosicoes = posicoes.edit();
-                editorPosicoes.putString("posicao" + ConfiguracoesRespostas.estado + String.valueOf(ConfiguracoesRespostas.numeroRespostas), ConfiguracoesRespostas.listaRespostas.get(ConfiguracoesRespostas.posicao).devolveNomePacote());
-                editorPosicoes.commit();
-                ConfiguracoesRespostas.listaRespostas.get(ConfiguracoesRespostas.posicao).colocaSeleccionado(true);
-                ConfiguracoesRespostas.numeroRespostas++;
-
-                Toast.makeText(getApplicationContext(), "✓ Álbuns de Fotografias Definidos!", Toast.LENGTH_SHORT).show();
-                finish();
+                    SharedPreferences posicoes = getActivity().getApplicationContext().getSharedPreferences("posicoes" + ConfiguracoesRespostas.estado, Context.MODE_PRIVATE);
+                    SharedPreferences.Editor editorPosicoes = posicoes.edit();
+                    editorPosicoes.putString("posicao" + ConfiguracoesRespostas.estado + String.valueOf(ConfiguracoesRespostas.numeroRespostas), ConfiguracoesRespostas.listaRespostas.get(ConfiguracoesRespostas.posicao).devolveNomePacote());
+                    editorPosicoes.commit();
+                    ConfiguracoesRespostas.listaRespostas.get(ConfiguracoesRespostas.posicao).colocaSeleccionado(true);
+                    ConfiguracoesRespostas.numeroRespostas++;
+                    Fragment fragment = null;
+                    Class fragmentClass;
+                    fragmentClass = ConfiguracoesRespostas.class;
+                    try {
+                        fragment = (Fragment) fragmentClass.newInstance();
+                        Bundle bundle = new Bundle();
+                        bundle.putString("estado", estado);
+                        fragment.setArguments(bundle);
+                    } catch (java.lang.InstantiationException | IllegalAccessException e) {
+                        e.printStackTrace();
+                    }
+                    FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+                    fragmentManager.beginTransaction().replace(R.id.layoutSeparador, fragment).addToBackStack(null).commit();
+                } else {
+                    Intent a = new Intent(getActivity().getApplicationContext(), GestorAlbunsFotografias.class);
+                    a.putExtra("estado", "QuickLaunch");
+                    getActivity().startService(a);
+                    Fragment fragment = null;
+                    Class fragmentClass;
+                    fragmentClass = ListaAtividadesSmartIDR.class;
+                    try {
+                        fragment = (Fragment) fragmentClass.newInstance();
+                        Bundle bundle = new Bundle();
+                        bundle.putString("estado", estado);
+                        fragment.setArguments(bundle);
+                    } catch (java.lang.InstantiationException | IllegalAccessException e) {
+                        e.printStackTrace();
+                    }
+                    FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+                    fragmentManager.beginTransaction().replace(R.id.layoutSeparador, fragment).addToBackStack(null).commit();
+                }
+                Toast.makeText(getActivity().getApplicationContext(), "✓ Álbuns de Fotografias Definidos!", Toast.LENGTH_SHORT).show();
             }
         });
+        return view;
     }
 
-    private void criaListaAlbunsFotografias(){
-        ListView mainListView = (ListView) findViewById(R.id.listaAlbuns);
-        if (listaAlbuns == null)
-            listaAlbuns = new ArrayList<>();
+    @Override
+    public void onResume() {
+        super.onResume();
+    }
+
+
+    private void criaListaAlbunsFotografias() {
+        ListView mainListView = (ListView) view.findViewById(R.id.listaAlbuns);
+        listaAlbuns = new ArrayList<>();
 
         File pastaAlbunsUm = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + Environment.DIRECTORY_PICTURES + File.separator);
         File pastaAlbunsDois = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + Environment.DIRECTORY_DCIM + File.separator);
@@ -129,13 +171,13 @@ public class ConfiguracoesAlbunsFotografias extends Activity {
         if (pastaAlbunsDois.exists())
             listaAlbuns(pastaAlbunsDois);
 
-        final ArrayAdapter<ItemLista> adaptadorLista = new AdaptadorAlbuns(this, listaAlbuns);
+        final ArrayAdapter<ItemLista> adaptadorLista = new AdaptadorAlbuns(getActivity(), listaAlbuns);
         mainListView.setAdapter(adaptadorLista);
-        Switch botaoSelecionarTudo = (Switch) findViewById(R.id.botaoSelecionarTudo);
-        botaoSelecionarTudo.setOnClickListener(new View.OnClickListener() {
+        Switch botaoSelecionarTudo = (Switch) view.findViewById(R.id.botaoSelecionarTudo);
+        botaoSelecionarTudo.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
-            public void onClick(View v) {
-                if(!selecionarTudo) {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (!selecionarTudo) {
                     listaAlbunsSeleccionados.clear();
                     for (int i = 0; i < listaAlbuns.size(); i++) {
                         listaAlbuns.get(i).colocaSeleccionado(true);
@@ -143,8 +185,7 @@ public class ConfiguracoesAlbunsFotografias extends Activity {
                         listaAlbunsSeleccionados.add(listaAlbuns.get(i).devolveNomePacote());
                     }
                     selecionarTudo = true;
-                }
-                else {
+                } else {
                     for (int i = 0; i < listaAlbuns.size(); i++) {
                         listaAlbuns.get(i).colocaSeleccionado(false);
                         adaptadorLista.notifyDataSetChanged();
@@ -152,7 +193,8 @@ public class ConfiguracoesAlbunsFotografias extends Activity {
                     }
                     selecionarTudo = false;
                 }
-            }});
+            }
+        });
     }
 
     private boolean eFotografia(File ficheiro) {
@@ -236,7 +278,7 @@ public class ConfiguracoesAlbunsFotografias extends Activity {
             ImageView icon;
 
             if (convertView == null) {
-                convertView = getLayoutInflater().inflate(R.layout.item_lista_aplicacoes_albuns, null);
+                convertView = getActivity().getLayoutInflater().inflate(R.layout.item_lista_aplicacoes_albuns, null);
 
                 nomeAlbum = (TextView) convertView.findViewById(R.id.nome_album);
                 checkBox = (CheckBox) convertView.findViewById(R.id.checkbox);
@@ -270,24 +312,23 @@ public class ConfiguracoesAlbunsFotografias extends Activity {
         }
     }
 
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-        SharedPreferences.Editor editor = preferenciasAlbunsFotografias.edit();
-        for (Map.Entry<String, ?> entry : conjuntoPreferenciasAlbunsFotografias.entrySet()) {
-            if (entry.getValue().equals(GestorAlbunsFotografias.class.getName())) {
-                editor.remove(entry.getKey());
-                editor.commit();
-            }
-        }
-        SharedPreferences posicoes = getApplicationContext().getSharedPreferences("posicoes" + ConfiguracoesRespostas.estado, MODE_PRIVATE);
-        SharedPreferences.Editor editorPosicoes = posicoes.edit();
-        for (Map.Entry<String, ?> entrada : posicoes.getAll().entrySet()) {
-            if (entrada.getValue().equals(ConfiguracoesRespostas.listaRespostas.get(ConfiguracoesRespostas.posicao).devolveNomePacote())) {
-                editorPosicoes.remove(entrada.getKey());
-                editorPosicoes.commit();
-            }
-        }
-        finish();
+    /**@Override public void onBackPressed() {
+    super.onBackPressed();
+    SharedPreferences.Editor editor = preferenciasAlbunsFotografias.edit();
+    for (Map.Entry<String, ?> entry : conjuntoPreferenciasAlbunsFotografias.entrySet()) {
+    if (entry.getValue().equals(GestorAlbunsFotografias.class.getName())) {
+    editor.remove(entry.getKey());
+    editor.commit();
     }
+    }
+    SharedPreferences posicoes = getApplicationContext().getSharedPreferences("posicoes" + ConfiguracoesRespostas.estado, MODE_PRIVATE);
+    SharedPreferences.Editor editorPosicoes = posicoes.edit();
+    for (Map.Entry<String, ?> entrada : posicoes.getAll().entrySet()) {
+    if (entrada.getValue().equals(ConfiguracoesRespostas.listaRespostas.get(ConfiguracoesRespostas.posicao).devolveNomePacote())) {
+    editorPosicoes.remove(entrada.getKey());
+    editorPosicoes.commit();
+    }
+    }
+    finish();
+    }**/
 }

@@ -9,7 +9,9 @@ public class ReiniciaDetecao extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        Intent reinicia = new Intent(context, DetetorLigacaoSmartphone.class);
+        Intent reinicia = new Intent(context, DetetorPartilhaControlada.class);
+        context.startService(reinicia);
+        reinicia = new Intent(context, DetetorLigacaoSmartphone.class);
         context.startService(reinicia);
     }
 }

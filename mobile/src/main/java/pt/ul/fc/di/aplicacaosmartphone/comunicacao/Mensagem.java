@@ -13,9 +13,9 @@ import java.util.concurrent.TimeUnit;
 
 public class Mensagem implements GoogleApiClient.ConnectionCallbacks {
 
-    private static final long CONNECTION_TIME_OUT_MS = 100;
+    private static final long CONNECTION_TIME_OUT_MS = 2000;
     private String mensagem;
-    private byte[] dados;
+    private byte[] dadosMensagem;
     private Application aplicacao;
 
     public Mensagem(String mensagem, Application aplicacao) {
@@ -23,9 +23,9 @@ public class Mensagem implements GoogleApiClient.ConnectionCallbacks {
         this.aplicacao = aplicacao;
     }
 
-    public Mensagem(String mensagem, byte[] dados, Application aplicacao) {
-        this.mensagem=mensagem;
-        this.dados = dados;
+    public Mensagem(String mensagem, byte[] dadosMensagem, Application aplicacao) {
+        this.mensagem = mensagem;
+        this.dadosMensagem = dadosMensagem;
         this.aplicacao = aplicacao;
     }
 
@@ -64,7 +64,7 @@ public class Mensagem implements GoogleApiClient.ConnectionCallbacks {
                     Log.i("Sem Ligação! ", "Sem Ligação!");
                 else {
                     for (Node no : listaNos.getNodes()) {
-                        Wearable.MessageApi.sendMessage(clienteApi, no.getId(), mensagem, dados).await();
+                        Wearable.MessageApi.sendMessage(clienteApi, no.getId(), mensagem, dadosMensagem).await();
                     }
                 }
                 clienteApi.disconnect();

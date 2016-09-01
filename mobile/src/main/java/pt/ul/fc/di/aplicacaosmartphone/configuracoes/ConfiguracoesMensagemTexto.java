@@ -1,6 +1,7 @@
 package pt.ul.fc.di.aplicacaosmartphone.configuracoes;
 
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
@@ -16,6 +17,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Map;
 
+import pt.ul.fc.di.aplicacaosmartphone.respostas.ExibirMensagemTexto;
+
 public class ConfiguracoesMensagemTexto extends AppCompatActivity {
 
     @Override
@@ -27,10 +30,9 @@ public class ConfiguracoesMensagemTexto extends AppCompatActivity {
         definirMensagemTexto();
     }
 
-
     private void definirMensagemTexto() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Defina uma Mensagem de Texto:");
+        builder.setTitle("Define a Text Message:");
         final EditText input = new EditText(this);
         input.setInputType(InputType.TYPE_CLASS_TEXT);
         builder.setView(input);
@@ -54,15 +56,23 @@ public class ConfiguracoesMensagemTexto extends AppCompatActivity {
                             e.printStackTrace();
                         }
 
-                        SharedPreferences posicoes = getApplicationContext().getSharedPreferences("posicoes" + ConfiguracoesRespostas.estado, MODE_PRIVATE);
-                        SharedPreferences.Editor editorPosicoes = posicoes.edit();
-                        editorPosicoes.putString("posicao" + ConfiguracoesRespostas.estado + String.valueOf(ConfiguracoesRespostas.numeroRespostas), ConfiguracoesRespostas.listaRespostas.get(ConfiguracoesRespostas.posicao).devolveNomePacote());
-                        editorPosicoes.apply();
-                        ConfiguracoesRespostas.listaRespostas.get(ConfiguracoesRespostas.posicao).colocaSeleccionado(true);
-                        ConfiguracoesRespostas.numeroRespostas++;
-                        Toast.makeText(getApplicationContext(), "Mensagem de Texto definida com sucesso!", Toast.LENGTH_SHORT).show();
-                        finish();
+                        if(!getIntent().getStringExtra("estado").equals("QuickLaunch")) {
 
+                            SharedPreferences posicoes = getApplicationContext().getSharedPreferences("posicoes" + ConfiguracoesRespostas.estado, MODE_PRIVATE);
+                            SharedPreferences.Editor editorPosicoes = posicoes.edit();
+                            editorPosicoes.putString("posicao" + ConfiguracoesRespostas.estado + String.valueOf(ConfiguracoesRespostas.numeroRespostas), ConfiguracoesRespostas.listaRespostas.get(ConfiguracoesRespostas.posicao).devolveNomePacote());
+                            editorPosicoes.apply();
+                            ConfiguracoesRespostas.listaRespostas.get(ConfiguracoesRespostas.posicao).colocaSeleccionado(true);
+                            ConfiguracoesRespostas.numeroRespostas++;
+                        }
+                        else{
+                            Intent a = new Intent(getApplicationContext(), ExibirMensagemTexto.class);
+                            a.putExtra("estado","QuickLaunch");
+                            startService(a);
+                        }
+                        Toast.makeText(getApplicationContext(), "Mensagem de Texto definida com sucesso!", Toast.LENGTH_SHORT).show();
+
+                        finish();
                     }
                 }
 

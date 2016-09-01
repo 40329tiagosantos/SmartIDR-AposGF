@@ -24,7 +24,9 @@ public class DetetaIntrusao extends AccessibilityService {
                 return "TYPE_VIEW_SELECTED";
             case AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED:
                 return "TYPE_WINDOW_CONTENT_CHANGED";
-           }
+            case AccessibilityEvent.TYPE_VIEW_TEXT_SELECTION_CHANGED:
+                return "TYPE_VIEW_TEXT_SELECTION_CHANGED";
+        }
         return "";
     }
 
@@ -41,141 +43,62 @@ public class DetetaIntrusao extends AccessibilityService {
         SharedPreferences preferenciasComandoSmartwatch = getApplicationContext().getSharedPreferences("preferenciasUtilizadorComLigacaoBT", MODE_PRIVATE);
         SharedPreferences preferenciasSemLigacao = getApplicationContext().getSharedPreferences("preferenciasUtilizadorSemLigacao", MODE_PRIVATE);
         SharedPreferences preferenciasPartilha = getApplicationContext().getSharedPreferences("preferenciasUtilizadorPartilha", MODE_PRIVATE);
-        
-        if (preferenciasComandoSmartwatch.contains("AlarmeSonoro")) {
-            if (devolveTipoEvento(evento).equals("TYPE_VIEW_CLICKED") || devolveTipoEvento(evento).equals("TYPE_VIEW_LONG_CLICKED") || devolveTipoEvento(evento).equals("TYPE_VIEW_SCROLLED")) {
-                Intent iniciaAlarme = new Intent(getApplicationContext(), AlarmeSonoro.class);
-                iniciaAlarme.putExtra("estado", "ComLigacaoBT");
-                startService(iniciaAlarme);
-            }
-        } else if (preferenciasPartilha.contains("AlarmeSonoro")) {
-            if (devolveTipoEvento(evento).equals("TYPE_VIEW_CLICKED") || devolveTipoEvento(evento).equals("TYPE_VIEW_LONG_CLICKED") || devolveTipoEvento(evento).equals("TYPE_VIEW_SCROLLED")) {
-                Intent iniciaAlarme = new Intent(getApplicationContext(), AlarmeSonoro.class);
-                iniciaAlarme.putExtra("estado", "Partilha");
-                startService(iniciaAlarme);
-            }
-        } else if (preferenciasSemLigacao.contains("AlarmeSonoro")) {
-            if (devolveTipoEvento(evento).equals("TYPE_VIEW_CLICKED") || devolveTipoEvento(evento).equals("TYPE_VIEW_LONG_CLICKED") || devolveTipoEvento(evento).equals("TYPE_VIEW_SCROLLED")) {
-                Intent iniciaAlarme = new Intent(getApplicationContext(), AlarmeSonoro.class);
-                iniciaAlarme.putExtra("estado", "SemLigacao");
-                startService(iniciaAlarme);
+        SharedPreferences preferenciasquickLaunch = getApplicationContext().getSharedPreferences("preferenciasUtilizadorQuickLaunch", MODE_PRIVATE);
+
+        if (devolveTipoEvento(evento).equals("TYPE_VIEW_CLICKED") || devolveTipoEvento(evento).equals("TYPE_VIEW_LONG_CLICKED") || devolveTipoEvento(evento).equals("TYPE_VIEW_SCROLLED")) {
+            if (preferenciasComandoSmartwatch.contains("AlarmeSonoro")) {
+                iniciaAlarmeSonoro("ComLigacaoBT");
+            } else if (preferenciasPartilha.contains("AlarmeSonoro")) {
+                iniciaAlarmeSonoro("Partilha");
+            } else if (preferenciasSemLigacao.contains("AlarmeSonoro")) {
+                iniciaAlarmeSonoro("SemLigacao");
             }
         }
 
 
-        if (preferenciasComandoSmartwatch.contains("Notificacao")) {
-            if (devolveTipoEvento(evento).equals("TYPE_VIEW_CLICKED") || devolveTipoEvento(evento).equals("TYPE_VIEW_LONG_CLICKED") || devolveTipoEvento(evento).equals("TYPE_VIEW_SCROLLED")) {
-                Intent iniciaNotificacao = new Intent(getApplicationContext(), Notificacao.class);
-                iniciaNotificacao.putExtra("estado", "ComLigacaoBT");
-                startService(iniciaNotificacao);
-            }
-        } else if (preferenciasPartilha.contains("Notificacao")) {
-            if (devolveTipoEvento(evento).equals("TYPE_VIEW_CLICKED") || devolveTipoEvento(evento).equals("TYPE_VIEW_LONG_CLICKED") || devolveTipoEvento(evento).equals("TYPE_VIEW_SCROLLED")) {
-                Intent iniciaNotificacao = new Intent(getApplicationContext(), Notificacao.class);
-                iniciaNotificacao.putExtra("estado", "Partilha");
-                startService(iniciaNotificacao);
+        if (devolveTipoEvento(evento).equals("TYPE_VIEW_CLICKED") || devolveTipoEvento(evento).equals("TYPE_VIEW_LONG_CLICKED") || devolveTipoEvento(evento).equals("TYPE_VIEW_SCROLLED")) {
+            if (preferenciasComandoSmartwatch.contains("ExibirMensagemTexto")) {
+                iniciaExibirMensagemTexto("ComLigacaoBT");
+            } else if (preferenciasPartilha.contains("ExibirMensagemTexto")) {
+                iniciaExibirMensagemTexto("Partilha");
+            } else if (preferenciasSemLigacao.contains("ExibirMensagemTexto")) {
+                iniciaExibirMensagemTexto("SemLigacao");
             }
         }
 
-        if (preferenciasComandoSmartwatch.contains("ExibirMensagemTexto")) {
-            if (devolveTipoEvento(evento).equals("TYPE_VIEW_CLICKED") || devolveTipoEvento(evento).equals("TYPE_VIEW_LONG_CLICKED") || devolveTipoEvento(evento).equals("TYPE_VIEW_SCROLLED")) {
-                Intent iniciaExibirMensagem = new Intent(getApplicationContext(), ExibirMensagemTexto.class);
-                iniciaExibirMensagem.putExtra("estado", "ComLigacaoBT");
-                startService(iniciaExibirMensagem);
-            }
-        } else if (preferenciasPartilha.contains("ExibirMensagemTexto")) {
-            if (devolveTipoEvento(evento).equals("TYPE_VIEW_CLICKED") || devolveTipoEvento(evento).equals("TYPE_VIEW_LONG_CLICKED") || devolveTipoEvento(evento).equals("TYPE_VIEW_SCROLLED")) {
-                Intent iniciaExibirMensagem = new Intent(getApplicationContext(), ExibirMensagemTexto.class);
-                iniciaExibirMensagem.putExtra("estado", "Partilha");
-                startService(iniciaExibirMensagem);
-            }
-        } else if (preferenciasSemLigacao.contains("ExibirMensagemTexto")) {
-            if (devolveTipoEvento(evento).equals("TYPE_VIEW_CLICKED") || devolveTipoEvento(evento).equals("TYPE_VIEW_LONG_CLICKED") || devolveTipoEvento(evento).equals("TYPE_VIEW_SCROLLED")) {
-                Intent iniciaExibirMensagem = new Intent(getApplicationContext(), ExibirMensagemTexto.class);
-                iniciaExibirMensagem.putExtra("estado", "SemLigacao");
-                startService(iniciaExibirMensagem);
+        if (devolveTipoEvento(evento).equals("TYPE_VIEW_CLICKED") || devolveTipoEvento(evento).equals("TYPE_VIEW_LONG_CLICKED") || devolveTipoEvento(evento).equals("TYPE_VIEW_SCROLLED")) {
+            if (preferenciasComandoSmartwatch.contains("FotografarIntruso")) {
+                iniciaFotografarIntruso("ComLigacaoBT");
+            } else if (preferenciasSemLigacao.contains("FotografarIntruso")) {
+                iniciaFotografarIntruso("SemLigacao");
+            } else if (preferenciasPartilha.contains("FotografarIntruso")) {
+                iniciaFotografarIntruso("Partilha");
             }
         }
-
-        if (preferenciasComandoSmartwatch.contains("FotografarIntruso")) {
-            if (devolveTipoEvento(evento).equals("TYPE_VIEW_CLICKED") || devolveTipoEvento(evento).equals("TYPE_VIEW_LONG_CLICKED") || devolveTipoEvento(evento).equals("TYPE_VIEW_SCROLLED")) {
-                Intent iniciaFotografarIntruso = new Intent(getApplicationContext(), IniciarFotografarIntruso.class);
-                iniciaFotografarIntruso.putExtra("estado", "ComLigacaoBT");
-                startService(iniciaFotografarIntruso);
-            }
-        } else if (preferenciasSemLigacao.contains("FotografarIntruso")) {
-            if (devolveTipoEvento(evento).equals("TYPE_VIEW_CLICKED") || devolveTipoEvento(evento).equals("TYPE_VIEW_LONG_CLICKED") || devolveTipoEvento(evento).equals("TYPE_VIEW_SCROLLED")) {
-                Intent iniciaFotografarIntruso = new Intent(getApplicationContext(), IniciarFotografarIntruso.class);
-                iniciaFotografarIntruso.putExtra("estado", "SemLigacao");
-                startService(iniciaFotografarIntruso);
-            }
-        } else if (preferenciasPartilha.contains("FotografarIntruso")) {
-            if (devolveTipoEvento(evento).equals("TYPE_VIEW_CLICKED") || devolveTipoEvento(evento).equals("TYPE_VIEW_LONG_CLICKED") || devolveTipoEvento(evento).equals("TYPE_VIEW_SCROLLED")) {
-                Intent iniciaFotografarIntruso = new Intent(getApplicationContext(), IniciarFotografarIntruso.class);
-                iniciaFotografarIntruso.putExtra("estado", "Partilha");
-                startService(iniciaFotografarIntruso);
-            }
-        }
-
         if (preferenciasSemLigacao.contains("DesativarAplicacoes")) {
-            Intent iniciaFotografarIntruso = new Intent(getApplicationContext(), DesativarAplicacoes.class);
-            iniciaFotografarIntruso.putExtra("estado", "SemLigacao");
-            iniciaFotografarIntruso.putExtra("nomeEvento", devolveNomeEvento(evento));
-            iniciaFotografarIntruso.putExtra("nomePacote", evento.getPackageName().toString());
-            startService(iniciaFotografarIntruso);
+            iniciarDesativarAplicacoes("SemLigacao", devolveNomeEvento(evento), evento.getPackageName().toString());
         }
+
+        if (preferenciasquickLaunch.contains("DesativarAplicacoes")) {
+            iniciarDesativarAplicacoes("QuickLaunch", devolveNomeEvento(evento), evento.getPackageName().toString());
+        }
+
+
         if (preferenciasPartilha.contains("DesativarAplicacoes")) {
-            Intent iniciaFotografarIntruso = new Intent(getApplicationContext(), DesativarAplicacoes.class);
-            iniciaFotografarIntruso.putExtra("estado", "Partilha");
-            iniciaFotografarIntruso.putExtra("nomeEvento", devolveNomeEvento(evento));
-            iniciaFotografarIntruso.putExtra("nomePacote", evento.getPackageName().toString());
-            startService(iniciaFotografarIntruso);
+            iniciarDesativarAplicacoes("Partilha", devolveNomeEvento(evento), evento.getPackageName().toString());
         }
 
-        if (preferenciasComandoSmartwatch.contains("RegistoAtividades")) {
-
-            Intent iniciarRegistarAtividades = new Intent(getApplicationContext(), RegistoAtividades.class);
-            iniciarRegistarAtividades.putExtra("estado", "ComLigacaoBT");
-            iniciarRegistarAtividades.putExtra("nomeEvento", devolveNomeEvento(evento));
-            iniciarRegistarAtividades.putExtra("nomePacote", evento.getPackageName().toString());
-            if (evento.getContentDescription() != null)
-                iniciarRegistarAtividades.putExtra("descricaoEvento", evento.getContentDescription().toString());
-            else
-                iniciarRegistarAtividades.putExtra("descricaoEvento", "");
-
-            iniciarRegistarAtividades.putExtra("tipoEvento", devolveTipoEvento(evento));
-            iniciarRegistarAtividades.putExtra("textoEvento", evento.getText().toString());
-            iniciarRegistarAtividades.putExtra("classeEvento", evento.getClassName().toString());
-            startService(iniciarRegistarAtividades);
-
-        } else if (preferenciasSemLigacao.contains("RegistoAtividades")) {
-            Intent iniciarRegistarAtividades = new Intent(getApplicationContext(), RegistoAtividades.class);
-            iniciarRegistarAtividades.putExtra("estado", "SemLigacao");
-            iniciarRegistarAtividades.putExtra("nomeEvento", devolveNomeEvento(evento));
-            iniciarRegistarAtividades.putExtra("nomePacote", evento.getPackageName().toString());
-            if (evento.getContentDescription() != null)
-                iniciarRegistarAtividades.putExtra("descricaoEvento", evento.getContentDescription().toString());
-            else
-                iniciarRegistarAtividades.putExtra("descricaoEvento", "");
-
-            iniciarRegistarAtividades.putExtra("tipoEvento", devolveTipoEvento(evento));
-            iniciarRegistarAtividades.putExtra("textoEvento", evento.getText().toString());
-            iniciarRegistarAtividades.putExtra("classeEvento", evento.getClassName().toString());
-            startService(iniciarRegistarAtividades);
-        } else if (preferenciasPartilha.contains("RegistoAtividades")) {
-            Intent iniciarRegistarAtividades = new Intent(getApplicationContext(), RegistoAtividades.class);
-            iniciarRegistarAtividades.putExtra("estado", "Partilha");
-            iniciarRegistarAtividades.putExtra("nomeEvento", devolveNomeEvento(evento));
-            iniciarRegistarAtividades.putExtra("nomePacote", evento.getPackageName().toString());
-            if (evento.getContentDescription() != null)
-                iniciarRegistarAtividades.putExtra("descricaoEvento", evento.getContentDescription().toString());
-            else
-                iniciarRegistarAtividades.putExtra("descricaoEvento", "");
-
-            iniciarRegistarAtividades.putExtra("tipoEvento", devolveTipoEvento(evento));
-            iniciarRegistarAtividades.putExtra("textoEvento", evento.getText().toString());
-            iniciarRegistarAtividades.putExtra("classeEvento", evento.getClassName().toString());
-            startService(iniciarRegistarAtividades);
+        if (devolveTipoEvento(evento).equals("TYPE_VIEW_CLICKED") || devolveTipoEvento(evento).equals("TYPE_VIEW_TEXT_SELECTION_CHANGED")|| devolveTipoEvento(evento).equals("TYPE_WINDOW_CONTENT_CHANGED")|| devolveTipoEvento(evento).equals("TYPE_VIEW_TEXT_CHANGED") || devolveTipoEvento(evento).equals("TYPE_WINDOW_STATE_CHANGED") || devolveTipoEvento(evento).equals("TYPE_VIEW_SELECTED")) {
+            if (preferenciasComandoSmartwatch.contains("RegistoAtividades")) {
+                iniciaRegistoAtividades("ComLigacaoBT", evento);
+            } else if (preferenciasSemLigacao.contains("RegistoAtividades")) {
+                iniciaRegistoAtividades("SemLigacao", evento);
+            } else if (preferenciasPartilha.contains("RegistoAtividades")) {
+                iniciaRegistoAtividades("Partilha", evento);
+            }
+            else if (preferenciasquickLaunch.contains("RegistoAtividades")) {
+                iniciaRegistoAtividades("QuickLaunch", evento);
+            }
         }
     }
 
@@ -191,5 +114,46 @@ public class DetetaIntrusao extends AccessibilityService {
         info.eventTypes = AccessibilityEvent.TYPES_ALL_MASK;
         info.feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC;
         setServiceInfo(info);
+    }
+
+    private void iniciaAlarmeSonoro(String estado) {
+        Intent iniciaAlarme = new Intent(getApplicationContext(), AlarmeSonoro.class);
+        iniciaAlarme.putExtra("estado", estado);
+        startService(iniciaAlarme);
+    }
+
+    private void iniciaExibirMensagemTexto(String estado) {
+        Intent iniciaExibirMensagem = new Intent(getApplicationContext(), ExibirMensagemTexto.class);
+        iniciaExibirMensagem.putExtra("estado", estado);
+        startService(iniciaExibirMensagem);
+    }
+
+    private void iniciaFotografarIntruso(String estado) {
+        Intent iniciaFotografarIntruso = new Intent(getApplicationContext(), IniciarFotografarIntruso.class);
+        iniciaFotografarIntruso.putExtra("estado", estado);
+        startService(iniciaFotografarIntruso);
+    }
+
+    private void iniciarDesativarAplicacoes(String estado, String nomeEvento, String nomePacote) {
+        Intent iniciaDesativarAplicacoes = new Intent(getApplicationContext(), DesativarAplicacoes.class);
+        iniciaDesativarAplicacoes.putExtra("estado", estado);
+        iniciaDesativarAplicacoes.putExtra("nomeEvento", nomeEvento);
+        iniciaDesativarAplicacoes.putExtra("nomePacote", nomePacote);
+        startService(iniciaDesativarAplicacoes);
+    }
+
+    private void iniciaRegistoAtividades(String estado, AccessibilityEvent evento) {
+        Intent iniciarRegistarAtividades = new Intent(getApplicationContext(), RegistoAtividades.class);
+        iniciarRegistarAtividades.putExtra("estado", estado);
+        iniciarRegistarAtividades.putExtra("nomeEvento", devolveNomeEvento(evento));
+        iniciarRegistarAtividades.putExtra("nomePacote", evento.getPackageName().toString());
+        if (evento.getContentDescription() != null)
+            iniciarRegistarAtividades.putExtra("descricaoEvento", evento.getContentDescription().toString());
+        else
+            iniciarRegistarAtividades.putExtra("descricaoEvento", "");
+
+        iniciarRegistarAtividades.putExtra("tipoEvento", devolveTipoEvento(evento));
+        iniciarRegistarAtividades.putExtra("classeEvento", evento.getClassName().toString());
+        startService(iniciarRegistarAtividades);
     }
 }

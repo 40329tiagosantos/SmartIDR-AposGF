@@ -10,9 +10,19 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_toRightOf="@+id/icon_resposta"
-        android:paddingLeft="12dp"
+        android:paddingLeft="13dp"
         android:layout_centerVertical="true"
-        android:textSize="12dp"
+        android:textSize="14sp"
+        android:textColor="#000000" />
+
+    <TextView
+        android:id="@+id/descricao"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/nome_resposta"
+        android:layout_toRightOf="@+id/icon_resposta"
+        android:paddingLeft="13dp"
+        android:textSize="11sp"
         android:textColor="#000000" />
 
     <TextView
@@ -23,12 +33,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
-        android:textSize="26dp" />
+        android:textSize="26sp" />
 
     <ImageView
         android:id="@+id/icon_resposta"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
         android:layout_alignParentLeft="true"
         android:layout_centerVertical="true" />
 
@@ -39,7 +49,7 @@
         android:layout_height="wrap_content"
         android:paddingLeft="12dp"
         android:layout_centerVertical="true"
-        android:textSize="14dp"
+        android:textSize="14sp"
         android:textColor="#000000" />
 
 </RelativeLayout>

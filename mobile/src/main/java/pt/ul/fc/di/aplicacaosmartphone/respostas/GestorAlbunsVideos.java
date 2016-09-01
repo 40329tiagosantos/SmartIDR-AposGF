@@ -10,15 +10,16 @@ import android.os.IBinder;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 
-import pt.ul.fc.di.aplicacaosmartphone.comunicacao.Mensagem;
-
 import java.io.File;
 import java.util.Map;
+
+import pt.ul.fc.di.aplicacaosmartphone.comunicacao.Mensagem;
 
 public class GestorAlbunsVideos extends Service {
 
     private boolean escondeuPartilha;
     private boolean escondeuSemLigacao;
+    private boolean escondeuQuickLaunch;
     private boolean escondeuComLigacao;
 
     @Override
@@ -26,6 +27,7 @@ public class GestorAlbunsVideos extends Service {
         if (intent.getStringExtra("reporAlbuns") != null) {
             apresentaAlbunsEstado("SemLigacao");
             apresentaAlbunsEstado("Partilha");
+            apresentaAlbunsEstado("QuickLaunch");
         } else {
             if (intent.getStringExtra("estado").equals("Partilha")) {
                 if (!escondeuPartilha) {
@@ -35,6 +37,10 @@ public class GestorAlbunsVideos extends Service {
                     apresentaAlbunsEstado("Partilha");
                     escondeuPartilha = false;
                 }
+            }
+            if (intent.getStringExtra("estado").equals("QuickLaunch")) {
+                    escondeAlbunsEstado("QuickLaunch");
+
             }
             if (intent.getStringExtra("estado").equals("SemLigacao")) {
                 if (!escondeuSemLigacao) {

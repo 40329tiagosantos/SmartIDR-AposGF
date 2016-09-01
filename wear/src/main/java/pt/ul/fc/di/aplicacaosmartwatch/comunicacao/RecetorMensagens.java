@@ -1,8 +1,5 @@
 package pt.ul.fc.di.aplicacaosmartwatch.comunicacao;
 
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.BitmapFactory;
@@ -10,7 +7,6 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.PowerManager;
 import android.os.Vibrator;
 import android.view.View;
 import android.widget.Toast;
@@ -21,8 +17,13 @@ import com.google.android.gms.wearable.WearableListenerService;
 
 import java.util.ArrayList;
 
+import pt.ul.fc.di.aplicacaosmartwatch.interfaceaplicacao.BloquearFragment;
+import pt.ul.fc.di.aplicacaosmartwatch.interfaceaplicacao.ConfiguracoesFragment;
+import pt.ul.fc.di.aplicacaosmartwatch.interfaceaplicacao.ConstroiFragmentos;
+import pt.ul.fc.di.aplicacaosmartwatch.interfaceaplicacao.DesativaAplicacaoFragment;
 import pt.ul.fc.di.aplicacaosmartwatch.interfaceaplicacao.ListaAtividades;
-import pt.ul.fc.di.aplicacaosmartwatch.interfaceaplicacao.ListaRespostas;
+import pt.ul.fc.di.aplicacaosmartwatch.interfaceaplicacao.ModoPartilhaControladaFragment;
+import pt.ul.fc.di.aplicacaosmartwatch.interfaceaplicacao.PedirAutenticacaoFragment;
 
 public class RecetorMensagens extends WearableListenerService {
 
@@ -31,77 +32,159 @@ public class RecetorMensagens extends WearableListenerService {
     @Override
     public void onMessageReceived(MessageEvent eventoMensagem) {
         String mensagem = eventoMensagem.getPath();
-        if (mensagem.equals("Intrusao")) {
-            PowerManager powerManager = (PowerManager) getApplicationContext().getSystemService(Context.POWER_SERVICE);
-            PowerManager.WakeLock wakeLock = powerManager.newWakeLock((PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP), "TAG");
-            wakeLock.acquire();
-            Notification notificacao = new Notification.Builder(this)
-                    .setContentText("Intrusão Detetada!")
-                    .setSmallIcon(R.drawable.iconprincipal)
-                    .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.iconintrusao))
-                    .setAutoCancel(true)
-                    .setVibrate(new long[]{1000, 1000, 1000, 1000})
-                    .build();
 
-            NotificationManager gestorNotificacoes = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-            gestorNotificacoes.notify(0, notificacao);
-            wakeLock.release();
-        } else if (mensagem.contains("Atividade: ")) {
-            PowerManager powerManager = (PowerManager) getApplicationContext().getSystemService(Context.POWER_SERVICE);
-            PowerManager.WakeLock wakeLock = powerManager.newWakeLock((PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP), "TAG");
-            wakeLock.acquire();
+        if (mensagem.contains("Atividade: ")) {
 
-            if(ListaAtividades.listaIcons==null){
-                ListaAtividades.listaIcons=new ArrayList<>();
-                SharedPreferences preferencias = getApplicationContext().getSharedPreferences("ListaAtividades", MODE_PRIVATE);
-                SharedPreferences.Editor editor = preferencias.edit();
-                editor.clear();
-                editor.commit();
-            }
-            SharedPreferences preferencias = getApplicationContext().getSharedPreferences("ListaAtividades", MODE_PRIVATE);
-            SharedPreferences.Editor editor = preferencias.edit();
+            if (ListaAtividades.listaIcons == null)
+                ListaAtividades.listaIcons = new ArrayList<>();
+            if (ListaAtividades.listaAtividades == null)
+                ListaAtividades.listaAtividades = new ArrayList<>();
+
             mensagem = mensagem.replace("Atividade: ", "");
-            editor.putString("atividade" + String.valueOf(preferencias.getAll().size()), mensagem);
-            editor.commit();
+            ListaAtividades.listaAtividades.add(mensagem);
 
-            numeroAtividades++;
-
-            if (ListaAtividades.iniciouAtividade || !ListaRespostas.iniciouAplicacao) {
-                Intent listaAtividades = new Intent(getApplicationContext(), ListaAtividades.class);
-                listaAtividades.putExtra("Icon",eventoMensagem.getData());
+            byte [] dadosMensagem = eventoMensagem.getData();
+            Drawable icon = new BitmapDrawable(getResources(), BitmapFactory.decodeByteArray(dadosMensagem, 0, dadosMensagem.length));
+            ListaAtividades.listaIcons.add(0, icon);
+            if (ListaAtividades.iniciouAtividade && ListaAtividades.iniciouAplicacao) {
+                Intent listaAtividades = new Intent(getApplicationContext(), ConstroiFragmentos.class);
                 listaAtividades.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 listaAtividades.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 startActivity(listaAtividades);
-            } else {
+            } else if (!ListaAtividades.iniciouAtividade) {
+                numeroAtividades++;
                 if (numeroAtividades == 1) {
-                    apresentaMensagem(String.valueOf(numeroAtividades) + " nova atividade!");
-                    Drawable icon = new BitmapDrawable(getApplicationContext().getResources(), BitmapFactory.decodeByteArray(eventoMensagem.getData(), 0, eventoMensagem.getData().length));
-                    ListaAtividades.listaIcons.add(0,icon);
+                    apresentaMensagem(String.valueOf(numeroAtividades) + " new activity!");
+                } else {
+                    apresentaMensagem(String.valueOf(numeroAtividades) + " new activities!");
                 }
-                else {
-                    apresentaMensagem(String.valueOf(numeroAtividades) + " novas atividades!");
-                    Drawable icon = new BitmapDrawable(getApplicationContext().getResources(), BitmapFactory.decodeByteArray(eventoMensagem.getData(), 0, eventoMensagem.getData().length));
-                    ListaAtividades.listaIcons.add(0,icon);
-                }
-            }
-            wakeLock.release();
-        } else if (mensagem.equals("ModoPartilhaControlada")) {
-            long padrao[] = {0, 200, 200, 200};
-            ((Vibrator) getSystemService(VIBRATOR_SERVICE)).vibrate(padrao, -1);
-        } else {
-            apresentaMensagem(mensagem);
-            if (ListaRespostas.iniciouAplicacao) {
-                new Handler(Looper.getMainLooper()).post(new Runnable() {
-                    @Override
-                    public void run() {
-                        ListaRespostas.iconProgresso.setVisibility(View.INVISIBLE);
-                        ListaRespostas.cabecalho.setVisibility(View.VISIBLE);
-                        ListaRespostas.listaRespostas.setVisibility(View.VISIBLE);
-                    }
-                });
             }
         }
+
+        else if (mensagem.equals("Bloqueado")) {
+            SharedPreferences preferencias = getApplicationContext().getSharedPreferences("NomeBotaoBloquear", MODE_PRIVATE);
+            SharedPreferences.Editor editor = preferencias.edit();
+            editor.putString("NomeBotaoBloquear", "Unbrick");
+            editor.apply();
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    BloquearFragment.actionPage.setText("Unbrick");
+                    BloquearFragment.actionPage.setImageResource(R.drawable.icondesbloquear);
+                    BloquearFragment.progresso.setVisibility(View.INVISIBLE);
+                    BloquearFragment.actionPage.getButton().setVisibility(View.VISIBLE);
+                }
+            });
+        } else if (mensagem.equals("Desbloqueado")) {
+            SharedPreferences preferencias = getApplicationContext().getSharedPreferences("NomeBotaoBloquear", MODE_PRIVATE);
+            SharedPreferences.Editor editor = preferencias.edit();
+            editor.putString("NomeBotaoBloquear", "Brick");
+            editor.apply();
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    BloquearFragment.actionPage.setText("Brick");
+                    BloquearFragment.actionPage.setImageResource(R.drawable.iconbloquear);
+                    BloquearFragment.progresso.setVisibility(View.INVISIBLE);
+                    BloquearFragment.actionPage.getButton().setVisibility(View.VISIBLE);
+                }
+            });
+        }
+
+        else if (mensagem.equals("PedidoAutenticacaoAtivado")) {
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    PedirAutenticacaoFragment.progresso.setVisibility(View.INVISIBLE);
+                    PedirAutenticacaoFragment.actionPage.getButton().setVisibility(View.VISIBLE);
+                }
+            });
+        }
+
+        else if (mensagem.equals("DesativarAplicacao")) {
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    DesativaAplicacaoFragment.progresso.setVisibility(View.INVISIBLE);
+                    DesativaAplicacaoFragment.actionPage.getButton().setVisibility(View.VISIBLE);
+                }
+            });
+        }
+
+        else if (mensagem.equals("ModoPartilhaControladaAtivado")) {
+            SharedPreferences preferencias = getApplicationContext().getSharedPreferences("NomeBotaoPartilhaControlada", MODE_PRIVATE);
+            SharedPreferences.Editor editor = preferencias.edit();
+            editor.putString("NomeBotaoPartilhaControlada", "Disable sharing mode");
+            editor.commit();
+            if (ModoPartilhaControladaFragment.progresso != null) {
+                if (ModoPartilhaControladaFragment.progresso.getVisibility() == View.VISIBLE) {
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            ModoPartilhaControladaFragment.actionPage.setText("Disable sharing mode");
+                            ModoPartilhaControladaFragment.actionPage.setImageResource(R.drawable.icondesativarpartilha);
+                            ModoPartilhaControladaFragment.progresso.setVisibility(View.INVISIBLE);
+                            ModoPartilhaControladaFragment.actionPage.getButton().setVisibility(View.VISIBLE);
+                        }
+                    });
+                } else {
+                    long padrao[] = {0, 200, 200, 200};
+                    ((Vibrator) getSystemService(VIBRATOR_SERVICE)).vibrate(padrao, -1);
+                }
+            } else {
+                long padrao[] = {0, 200, 200, 200};
+                ((Vibrator) getSystemService(VIBRATOR_SERVICE)).vibrate(padrao, -1);
+            }
+        } else if (mensagem.equals("ModoPartilhaControladaDesativado")) {
+            SharedPreferences preferencias = getApplicationContext().getSharedPreferences("NomeBotaoPartilhaControlada", MODE_PRIVATE);
+            SharedPreferences.Editor editor = preferencias.edit();
+            editor.putString("NomeBotaoPartilhaControlada", "Enable sharing mode");
+            editor.commit();
+            if (ModoPartilhaControladaFragment.progresso != null) {
+                if (ModoPartilhaControladaFragment.progresso.getVisibility() == View.VISIBLE) {
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            ModoPartilhaControladaFragment.actionPage.setText("Enable sharing mode");
+                            ModoPartilhaControladaFragment.actionPage.setImageResource(R.drawable.iconpartilha);
+                            ModoPartilhaControladaFragment.progresso.setVisibility(View.INVISIBLE);
+                            ModoPartilhaControladaFragment.actionPage.getButton().setVisibility(View.VISIBLE);
+                        }
+                    });
+                } else {
+                    long padrao[] = {0, 200, 200, 200};
+                    ((Vibrator) getSystemService(VIBRATOR_SERVICE)).vibrate(padrao, -1);
+                }
+            } else {
+                long padrao[] = {0, 200, 200, 200};
+                ((Vibrator) getSystemService(VIBRATOR_SERVICE)).vibrate(padrao, -1);
+            }
+        }
+        else if (mensagem.equals("ModoPartilhaControladaNaoConfigurado")) {
+            if (ModoPartilhaControladaFragment.progresso != null) {
+                if (ModoPartilhaControladaFragment.progresso.getVisibility() == View.VISIBLE) {
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            ModoPartilhaControladaFragment.progresso.setVisibility(View.INVISIBLE);
+                            ModoPartilhaControladaFragment.actionPage.getButton().setVisibility(View.VISIBLE);
+                            Toast.makeText(getApplicationContext(),"Setup Sharing Mode", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+            }
+        }
+        else if (mensagem.equals("AbrirConfiguracoes")) {
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    ConfiguracoesFragment.progresso.setVisibility(View.INVISIBLE);
+                    ConfiguracoesFragment.actionPage.getButton().setVisibility(View.VISIBLE);
+                }
+            });
+        }
     }
+
 
     private void apresentaMensagem(final String mensagem) {
         new Handler(Looper.getMainLooper()).post(new Runnable() {
@@ -109,14 +192,13 @@ public class RecetorMensagens extends WearableListenerService {
             public void run() {
                 final Toast toast = Toast.makeText(getApplicationContext(), mensagem, Toast.LENGTH_SHORT);
                 toast.show();
-
                 Handler handler = new Handler();
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         toast.cancel();
                     }
-                }, 1000);
+                }, 2500);
             }
         });
     }

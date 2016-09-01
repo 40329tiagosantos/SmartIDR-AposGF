@@ -11,13 +11,13 @@
         android:layout_toRightOf="@+id/icon_aplicacao"
         android:paddingLeft="10dp"
         android:layout_centerVertical="true"
-        android:textSize="12dp"
+        android:textSize="14sp"
         android:textColor="#000000" />
 
     <ImageView
         android:id="@+id/icon_aplicacao"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
         android:layout_alignParentLeft="true"
         android:layout_centerVertical="true" />
 
@@ -28,7 +28,7 @@
         android:layout_toRightOf="@+id/icon_album"
         android:paddingLeft="10dp"
         android:layout_centerVertical="true"
-        android:textSize="12dp"
+        android:textSize="14sp"
         android:textColor="#000000" />
 
     <ImageView

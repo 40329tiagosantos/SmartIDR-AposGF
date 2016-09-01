@@ -6,9 +6,11 @@ public class ItemLista{
 
     private String nome;
     private String nomePacote;
+    private String descricao;
     private Drawable icon;
     private boolean seleccionado;
     private boolean configuracao;
+    private long data;
 
     public ItemLista() {
     }
@@ -19,6 +21,14 @@ public class ItemLista{
 
     public void atribuiNome(String nomeAplicacao) {
         this.nome = nomeAplicacao;
+    }
+
+    public long devolveData() {
+        return data;
+    }
+
+    public void atribuiData(long data) {
+        this.data = data;
     }
 
     public String devolveNomePacote() {
@@ -52,5 +62,14 @@ public class ItemLista{
     public Drawable devolveIcon() {
         return icon;
     }
+
+    public String devolveDescricaco() {
+        return descricao;
+    }
+
+    public void atribuiDescricao(String descricao) {
+        this.descricao = descricao;
+    }
+
 }
 
